@@ -1,0 +1,4 @@
+baseUri: "https://petstore.swagger.io/v2"
+
+basePaths:
+  store: "store"
