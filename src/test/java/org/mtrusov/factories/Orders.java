@@ -9,8 +9,8 @@ import org.mtrusov.models.Order;
 public class Orders {
     public static Order defaultOrder() {
         return new Order(
-                1,
-                2,
+                9001,
+                2001,
                 3,
                 OffsetDateTime.now(ZoneOffset.UTC).truncatedTo(ChronoUnit.MILLIS),
                 "placed",

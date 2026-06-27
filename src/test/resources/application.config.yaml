@@ -1,4 +1,4 @@
-baseUri: "https://petstore.swagger.io/v2"
+baseUri: "http://localhost:8080/v2"
 
 basePaths:
   store: "store"

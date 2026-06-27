@@ -49,11 +49,11 @@ public class StoreContractTests {
         SchemaValidator.validateJsonSchema("schemas/ErrorMessageSchema.json", response);
     }
 
-     @Test
-     public void getOrderValidId() {
-         Response response = ordersApiClient.get(1);
-         SchemaValidator.validateJsonSchema("schemas/OrderSchema.json", response);
-     }
+    @Test
+    public void getOrderValidId() {
+        Response response = ordersApiClient.get(1001);
+        SchemaValidator.validateJsonSchema("schemas/OrderSchema.json", response);
+    }
 
     @Test
     public void getOrderInvalidId() {

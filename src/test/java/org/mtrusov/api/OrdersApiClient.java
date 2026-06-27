@@ -42,7 +42,7 @@ public class OrdersApiClient extends BaseApiClient {
     }
 
     public Response get(int orderId) {
-        return delete(String.valueOf(orderId));
+        return get(String.valueOf(orderId));
     }
 
     public Response get(String orderId) {

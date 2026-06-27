@@ -1,0 +1,18 @@
+{
+  "id": 2002,
+  "category": {
+    "id": 201,
+    "name": "phase-1-fixtures"
+  },
+  "name": "phase-1-sold-pet",
+  "photoUrls": [
+    "https://example.invalid/pets/phase-1-sold-pet.jpg"
+  ],
+  "tags": [
+    {
+      "id": 2002,
+      "name": "test-fixture"
+    }
+  ],
+  "status": "sold"
+}

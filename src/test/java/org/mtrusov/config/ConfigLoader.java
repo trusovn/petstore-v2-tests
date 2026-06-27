@@ -13,7 +13,11 @@ public class ConfigLoader {
     }
 
     public static AppConfig load() {
-        return load("application.config.yaml");
+        AppConfig config = load("application.config.yaml");
+        return new AppConfig(
+                effectiveBaseUri(config.baseUri()),
+                config.basePaths()
+        );
     }
 
     public static AppConfig load(String resourceName) {
@@ -28,5 +32,26 @@ public class ConfigLoader {
         } catch (IOException e) {
             throw new RuntimeException("Failed to load config: " + resourceName, e);
         }
+    }
+
+    private static String effectiveBaseUri(String yamlBaseUri) {
+        String systemProperty = nonBlank(System.getProperty("petstore.baseUri"));
+        if (systemProperty != null) {
+            return systemProperty;
+        }
+
+        String environmentVariable = nonBlank(System.getenv("PETSTORE_BASE_URI"));
+        if (environmentVariable != null) {
+            return environmentVariable;
+        }
+
+        return yamlBaseUri;
+    }
+
+    private static String nonBlank(String value) {
+        if (value == null || value.isBlank()) {
+            return null;
+        }
+        return value;
     }
 }
