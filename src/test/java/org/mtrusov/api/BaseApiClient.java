@@ -7,6 +7,8 @@ import io.restassured.specification.RequestSpecification;
 import io.restassured.specification.ResponseSpecification;
 import org.mtrusov.config.AuthProvider;
 
+import java.util.Objects;
+
 public class BaseApiClient {
     protected final RequestSpecification requestSpecification;
     protected final ResponseSpecification responseSpecification;
@@ -25,11 +27,14 @@ public class BaseApiClient {
     }
 
     protected RequestSpecification buildRequestSpecification(ApiConfig apiConfig) {
-        return new RequestSpecBuilder()
+        RequestSpecBuilder request = new RequestSpecBuilder()
                 .setBaseUri(apiConfig.baseUri())
                 .setBasePath(apiConfig.basePath())
                 .setAccept(ContentType.JSON)
-                .setContentType(ContentType.JSON)
-                .build();
+                .setContentType(ContentType.JSON);
+        if (authProvider != null && Objects.nonNull(authProvider.token())) {
+            request = request.addHeader("api_key", authProvider.token());
+        }
+        return request.build();
     }
 }
