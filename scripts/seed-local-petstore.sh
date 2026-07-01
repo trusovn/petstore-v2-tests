@@ -25,11 +25,13 @@ for fixture in "${REPO_ROOT}"/test-data/pets/*.json; do
     post_fixture "/pet" "${fixture}"
 done
 
+order_ids=()
 for fixture in "${REPO_ROOT}"/test-data/orders/*.json; do
+    order_ids+=("$(jq --raw-output --exit-status '.id' "${fixture}")")
     post_fixture "/store/order" "${fixture}"
 done
 
-for order_id in 1001 1002; do
+for order_id in "${order_ids[@]}"; do
     curl \
         --fail-with-body \
         --silent \
@@ -39,4 +41,4 @@ for order_id in 1001 1002; do
         "${BASE_URI}/store/order/${order_id}"
 done
 
-printf 'Verified fixture orders 1001 and 1002\n'
+printf 'Verified fixture orders %s\n' "${order_ids[*]}"

@@ -9,9 +9,19 @@ import org.mtrusov.api.OrdersApiClient;
 import org.mtrusov.config.ConfigLoader;
 import org.mtrusov.config.NoAuthProvider;
 import org.mtrusov.factories.Orders;
+import org.mtrusov.models.Order;
 import org.mtrusov.utils.SchemaValidator;
 
+import static org.mtrusov.utils.AssertUtils.*;
+import static org.mtrusov.utils.DateTimeAsserts.assertDateTimeIsValid;
+
 public class StoreContractTests {
+    private static final int PLACED_ORDER_ID = 1001;
+    private static final int MISSING_ORDER_ID = 1010101010;
+
+    private static final String NOT_FOUND_MESSAGE = "not found";
+
+
     private static InventoryApiClient inventoryApiClient;
     private static OrdersApiClient ordersApiClient;
 
@@ -27,43 +37,114 @@ public class StoreContractTests {
     @Test
     public void getInventory() {
         Response response = inventoryApiClient.get();
+        assertResponseCode(response, 200);
         SchemaValidator.validateJsonSchema("schemas/InventorySchema.json", response);
     }
 
+    @Test
+    public void createOrderValidBody() {
+        Response response = ordersApiClient.placeOrder(Orders.defaultOrder());
+        assertResponseCode(response, 200);
+        SchemaValidator.validateJsonSchema("schemas/OrderSchema.json", response);
+        assertOrderShipDateIsValid(response);
+    }
 
     @Test
-    public void createOrder() {
-        Response response = ordersApiClient.placeOrder(Orders.defaultOrder());
-        SchemaValidator.validateJsonSchema("schemas/OrderSchema.json", response);
+    public void createOrderMissingBody() {
+        Response response = ordersApiClient.placeOrder(null);
+        assertResponseCode(response, 400);
+        assertInfoMessageFieldCode(response, 400);
+        assertInfoMessageFieldMessageNoTraces(response);
+        SchemaValidator.validateJsonSchema("schemas/InfoMessageSchema.json", response);
+    }
+
+    @Test
+    public void createOrderEmptyBody() {
+        Response response = ordersApiClient.placeOrder("{}");
+        assertResponseCode(response, 400);
+        assertInfoMessageFieldCode(response, 400);
+        assertInfoMessageFieldMessageNoTraces(response);
+        SchemaValidator.validateJsonSchema("schemas/InfoMessageSchema.json", response);
     }
 
     @Test
     public void deleteOrderInvalidId() {
-        Response response = ordersApiClient.delete("asdf");
-        SchemaValidator.validateJsonSchema("schemas/ErrorMessageSchema.json", response);
+        Response response = ordersApiClient.delete("INVALID");
+        assertResponseCode(response, 400);
+        assertInfoMessageFieldCode(response, 400);
+        assertInfoMessageFieldMessageNoTraces(response);
+        SchemaValidator.validateJsonSchema("schemas/InfoMessageSchema.json", response);
+    }
+
+    @Test
+    public void deleteOrderNegativeId() {
+        Response response = ordersApiClient.delete(-1);
+        assertResponseCode(response, 400);
+        assertInfoMessageFieldCode(response, 400);
+        assertInfoMessageFieldMessageNoTraces(response);
+        SchemaValidator.validateJsonSchema("schemas/InfoMessageSchema.json", response);
     }
 
     @Test
     public void deleteOrderMissingId() {
-        Response response = ordersApiClient.delete(1010101010);
-        SchemaValidator.validateJsonSchema("schemas/ErrorMessageSchema.json", response);
+        Response response = ordersApiClient.delete(MISSING_ORDER_ID);
+        assertResponseCode(response, 404);
+        assertInfoMessageFieldCode(response, 404);
+        assertInfoMessageFieldMessageNoTraces(response);
+        SchemaValidator.validateJsonSchema("schemas/InfoMessageSchema.json", response);
+        assertInfoMessageFieldMessageContains(response, NOT_FOUND_MESSAGE);
+    }
+
+    @Test
+    public void deleteOrderValidId() {
+        Order order = Orders.defaultOrder();
+        Response createdOrderResponse = ordersApiClient.placeOrder(order);
+        assertResponseCode(createdOrderResponse, 200);
+
+        Response response = ordersApiClient.delete(order.id());
+        assertResponseCode(response, 200);
+        assertInfoMessageFieldCode(response, 200);
+        SchemaValidator.validateJsonSchema("schemas/InfoMessageSchema.json", response);
+        assertInfoMessageFieldMessageContains(response, order.id().toString());
     }
 
     @Test
     public void getOrderValidId() {
-        Response response = ordersApiClient.get(1001);
+        Response response = ordersApiClient.get(PLACED_ORDER_ID);
+        assertResponseCode(response, 200);
         SchemaValidator.validateJsonSchema("schemas/OrderSchema.json", response);
+        assertOrderShipDateIsValid(response);
     }
 
     @Test
     public void getOrderInvalidId() {
         Response response = ordersApiClient.get("INVALID");
-        SchemaValidator.validateJsonSchema("schemas/ErrorMessageSchema.json", response);
+        assertResponseCode(response, 400);
+        assertInfoMessageFieldCode(response, 400);
+        assertInfoMessageFieldMessageNoTraces(response);
+        SchemaValidator.validateJsonSchema("schemas/InfoMessageSchema.json", response);
     }
 
     @Test
-    public void getOrderMissingId() {
-        Response response = ordersApiClient.get(1010101010);
-        SchemaValidator.validateJsonSchema("schemas/ErrorMessageSchema.json", response);
+    public void getOrderNegativeId() {
+        Response response = ordersApiClient.get(-1);
+        assertResponseCode(response, 400);
+        assertInfoMessageFieldCode(response, 400);
+        assertInfoMessageFieldMessageNoTraces(response);
+        SchemaValidator.validateJsonSchema("schemas/InfoMessageSchema.json", response);
+    }
+
+    @Test
+    public void getOrderNotExistingId() {
+        Response response = ordersApiClient.get(MISSING_ORDER_ID);
+        assertResponseCode(response, 404);
+        assertInfoMessageFieldCode(response, 404);
+        assertInfoMessageFieldMessageNoTraces(response);
+        SchemaValidator.validateJsonSchema("schemas/InfoMessageSchema.json", response);
+        assertInfoMessageFieldMessageContains(response, NOT_FOUND_MESSAGE);
+    }
+
+    private static void assertOrderShipDateIsValid(Response response) {
+        assertDateTimeIsValid(response, "shipDate");
     }
 }

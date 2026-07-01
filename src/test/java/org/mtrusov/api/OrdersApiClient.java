@@ -1,8 +1,11 @@
 package org.mtrusov.api;
 
 import io.restassured.response.Response;
+import io.restassured.specification.RequestSpecification;
 import org.mtrusov.config.AuthProvider;
 import org.mtrusov.models.Order;
+
+import java.util.Objects;
 
 import static io.restassured.RestAssured.given;
 
@@ -11,12 +14,14 @@ public class OrdersApiClient extends BaseApiClient {
         super(apiConfig, authProvider);
     }
 
-    public Response placeOrder(Order order) {
-        return given()
+    public Response placeOrder(Object order) {
+        RequestSpecification request = given()
                 .spec(requestSpecification)
-
-                .when()
-                .body(order)
+                .when();
+        if (Objects.nonNull(order)) {
+            request = request.body(order);
+        }
+        return request
                 .post("/order")
                 
                 .then()
@@ -37,6 +42,7 @@ public class OrdersApiClient extends BaseApiClient {
                 .delete("/order/{orderId}")
 
                 .then()
+                .log().all()
                 .spec(responseSpecification)
                 .extract().response();
     }
@@ -54,6 +60,7 @@ public class OrdersApiClient extends BaseApiClient {
                 .get("/order/{orderId}")
 
                 .then()
+                .log().all()
                 .spec(responseSpecification)
                 .extract().response();
     }
