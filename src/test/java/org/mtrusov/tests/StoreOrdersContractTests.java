@@ -5,12 +5,17 @@ import io.restassured.response.Response;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.mtrusov.api.OrdersApiClient;
 import org.mtrusov.config.ConfigLoader;
 import org.mtrusov.config.NoAuthProvider;
 import org.mtrusov.factories.Orders;
 import org.mtrusov.models.Order;
 import org.mtrusov.utils.SchemaValidator;
+
+import java.util.stream.Stream;
 
 import static org.mtrusov.utils.AssertUtils.assertInfoMessageFieldCode;
 import static org.mtrusov.utils.AssertUtils.assertInfoMessageFieldMessageContains;
@@ -21,8 +26,6 @@ import static org.mtrusov.utils.DateTimeAsserts.assertDateTimeIsValid;
 public class StoreOrdersContractTests {
     private static final int PLACED_ORDER_ID = 1001;
     private static final int MISSING_ORDER_ID = 1010101010;
-
-    private static final String NOT_FOUND_MESSAGE = "not found";
 
     private static OrdersApiClient ordersApiClient;
 
@@ -66,34 +69,6 @@ public class StoreOrdersContractTests {
     @Nested
     class DeleteOrder {
         @Test
-        public void deleteOrderInvalidId() {
-            Response response = ordersApiClient.delete("INVALID");
-            assertResponseCode(response, 400);
-            assertInfoMessageFieldCode(response, 400);
-            assertInfoMessageFieldMessageNoTraces(response);
-            SchemaValidator.validateJsonSchema("schemas/ErrorResponseSchema.json", response);
-        }
-
-        @Test
-        public void deleteOrderNegativeId() {
-            Response response = ordersApiClient.delete(-1);
-            assertResponseCode(response, 400);
-            assertInfoMessageFieldCode(response, 400);
-            assertInfoMessageFieldMessageNoTraces(response);
-            SchemaValidator.validateJsonSchema("schemas/ErrorResponseSchema.json", response);
-        }
-
-        @Test
-        public void deleteOrderMissingId() {
-            Response response = ordersApiClient.delete(MISSING_ORDER_ID);
-            assertResponseCode(response, 404);
-            assertInfoMessageFieldCode(response, 404);
-            assertInfoMessageFieldMessageNoTraces(response);
-            SchemaValidator.validateJsonSchema("schemas/ErrorResponseSchema.json", response);
-            assertInfoMessageFieldMessageContains(response, NOT_FOUND_MESSAGE);
-        }
-
-        @Test
         public void deleteOrderValidId() {
             Order order = Orders.defaultOrder();
             Response createdOrderResponse = ordersApiClient.placeOrder(order);
@@ -106,6 +81,19 @@ public class StoreOrdersContractTests {
             assertInfoMessageFieldMessageContains(response, order.id().toString());
         }
 
+        @ParameterizedTest
+        @MethodSource("org.mtrusov.tests.StoreOrdersContractTests#invalidOrderIds")
+        public void deleteOrderInvalidIds(String orderId, int expectedErrorCode) {
+            Response response = ordersApiClient.delete(orderId);
+            assertResponseCode(response, expectedErrorCode);
+            assertInfoMessageFieldCode(response, expectedErrorCode);
+            assertInfoMessageFieldMessageNoTraces(response);
+            SchemaValidator.validateJsonSchema("schemas/ErrorResponseSchema.json", response);
+        }
+    }
+
+    @Nested
+    class GetOrder {
         @Test
         public void getOrderValidId() {
             Response response = ordersApiClient.get(PLACED_ORDER_ID);
@@ -114,40 +102,32 @@ public class StoreOrdersContractTests {
             assertOrderShipDateIsValid(response);
         }
 
-    }
-
-    @Nested
-    class GetOrder {
-        @Test
-        public void getOrderInvalidId() {
-            Response response = ordersApiClient.get("INVALID");
-            assertResponseCode(response, 400);
-            assertInfoMessageFieldCode(response, 400);
+        @ParameterizedTest
+        @MethodSource("org.mtrusov.tests.StoreOrdersContractTests#invalidOrderIds")
+        public void getOrderInvalidIds(String orderId, int expectedErrorCode) {
+            Response response = ordersApiClient.get(orderId);
+            assertResponseCode(response, expectedErrorCode);
+            assertInfoMessageFieldCode(response, expectedErrorCode);
             assertInfoMessageFieldMessageNoTraces(response);
             SchemaValidator.validateJsonSchema("schemas/ErrorResponseSchema.json", response);
-        }
-
-        @Test
-        public void getOrderNegativeId() {
-            Response response = ordersApiClient.get(-1);
-            assertResponseCode(response, 400);
-            assertInfoMessageFieldCode(response, 400);
-            assertInfoMessageFieldMessageNoTraces(response);
-            SchemaValidator.validateJsonSchema("schemas/ErrorResponseSchema.json", response);
-        }
-
-        @Test
-        public void getOrderNotExistingId() {
-            Response response = ordersApiClient.get(MISSING_ORDER_ID);
-            assertResponseCode(response, 404);
-            assertInfoMessageFieldCode(response, 404);
-            assertInfoMessageFieldMessageNoTraces(response);
-            SchemaValidator.validateJsonSchema("schemas/ErrorResponseSchema.json", response);
-            assertInfoMessageFieldMessageContains(response, NOT_FOUND_MESSAGE);
         }
     }
 
     private static void assertOrderShipDateIsValid(Response response) {
         assertDateTimeIsValid(response, "shipDate");
+    }
+
+    public static Stream<Arguments> invalidOrderIds() {
+        return Stream.of(
+                Arguments.argumentSet(
+                        "Non-existing Order ID", String.valueOf(MISSING_ORDER_ID), 404
+                ),
+                Arguments.argumentSet(
+                        "Negative Order ID", "-1", 400
+                ),
+                Arguments.argumentSet(
+                        "Invalid String Order ID", "INVALID", 400
+                )
+        );
     }
 }
