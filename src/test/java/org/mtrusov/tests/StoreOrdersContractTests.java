@@ -40,7 +40,7 @@ public class StoreOrdersContractTests {
         public void validBody() {
             Response response = ordersApiClient.placeOrder(Orders.defaultOrder());
             assertResponseCode(response, 200);
-            SchemaValidator.validateJsonSchema("schemas/OrderSchema.json", response);
+            SchemaValidator.validateJsonSchema("schemas/GetCreateOrderSchema.json", response);
             assertOrderShipDateIsValid(response);
         }
 
@@ -50,7 +50,7 @@ public class StoreOrdersContractTests {
             assertResponseCode(response, 400);
             assertInfoMessageFieldCode(response, 400);
             assertInfoMessageFieldMessageNoTraces(response);
-            SchemaValidator.validateJsonSchema("schemas/InfoMessageSchema.json", response);
+            SchemaValidator.validateJsonSchema("schemas/ErrorResponseSchema.json", response);
         }
 
         @Test
@@ -59,7 +59,7 @@ public class StoreOrdersContractTests {
             assertResponseCode(response, 400);
             assertInfoMessageFieldCode(response, 400);
             assertInfoMessageFieldMessageNoTraces(response);
-            SchemaValidator.validateJsonSchema("schemas/InfoMessageSchema.json", response);
+            SchemaValidator.validateJsonSchema("schemas/ErrorResponseSchema.json", response);
         }
     }
 
@@ -71,7 +71,7 @@ public class StoreOrdersContractTests {
             assertResponseCode(response, 400);
             assertInfoMessageFieldCode(response, 400);
             assertInfoMessageFieldMessageNoTraces(response);
-            SchemaValidator.validateJsonSchema("schemas/InfoMessageSchema.json", response);
+            SchemaValidator.validateJsonSchema("schemas/ErrorResponseSchema.json", response);
         }
 
         @Test
@@ -80,7 +80,7 @@ public class StoreOrdersContractTests {
             assertResponseCode(response, 400);
             assertInfoMessageFieldCode(response, 400);
             assertInfoMessageFieldMessageNoTraces(response);
-            SchemaValidator.validateJsonSchema("schemas/InfoMessageSchema.json", response);
+            SchemaValidator.validateJsonSchema("schemas/ErrorResponseSchema.json", response);
         }
 
         @Test
@@ -89,7 +89,7 @@ public class StoreOrdersContractTests {
             assertResponseCode(response, 404);
             assertInfoMessageFieldCode(response, 404);
             assertInfoMessageFieldMessageNoTraces(response);
-            SchemaValidator.validateJsonSchema("schemas/InfoMessageSchema.json", response);
+            SchemaValidator.validateJsonSchema("schemas/ErrorResponseSchema.json", response);
             assertInfoMessageFieldMessageContains(response, NOT_FOUND_MESSAGE);
         }
 
@@ -102,7 +102,7 @@ public class StoreOrdersContractTests {
             Response response = ordersApiClient.delete(order.id());
             assertResponseCode(response, 200);
             assertInfoMessageFieldCode(response, 200);
-            SchemaValidator.validateJsonSchema("schemas/InfoMessageSchema.json", response);
+            SchemaValidator.validateJsonSchema("schemas/DeleteOrderResponseSchema.json", response);
             assertInfoMessageFieldMessageContains(response, order.id().toString());
         }
 
@@ -110,7 +110,7 @@ public class StoreOrdersContractTests {
         public void getOrderValidId() {
             Response response = ordersApiClient.get(PLACED_ORDER_ID);
             assertResponseCode(response, 200);
-            SchemaValidator.validateJsonSchema("schemas/OrderSchema.json", response);
+            SchemaValidator.validateJsonSchema("schemas/GetCreateOrderSchema.json", response);
             assertOrderShipDateIsValid(response);
         }
 
@@ -124,7 +124,7 @@ public class StoreOrdersContractTests {
             assertResponseCode(response, 400);
             assertInfoMessageFieldCode(response, 400);
             assertInfoMessageFieldMessageNoTraces(response);
-            SchemaValidator.validateJsonSchema("schemas/InfoMessageSchema.json", response);
+            SchemaValidator.validateJsonSchema("schemas/ErrorResponseSchema.json", response);
         }
 
         @Test
@@ -133,7 +133,7 @@ public class StoreOrdersContractTests {
             assertResponseCode(response, 400);
             assertInfoMessageFieldCode(response, 400);
             assertInfoMessageFieldMessageNoTraces(response);
-            SchemaValidator.validateJsonSchema("schemas/InfoMessageSchema.json", response);
+            SchemaValidator.validateJsonSchema("schemas/ErrorResponseSchema.json", response);
         }
 
         @Test
@@ -142,7 +142,7 @@ public class StoreOrdersContractTests {
             assertResponseCode(response, 404);
             assertInfoMessageFieldCode(response, 404);
             assertInfoMessageFieldMessageNoTraces(response);
-            SchemaValidator.validateJsonSchema("schemas/InfoMessageSchema.json", response);
+            SchemaValidator.validateJsonSchema("schemas/ErrorResponseSchema.json", response);
             assertInfoMessageFieldMessageContains(response, NOT_FOUND_MESSAGE);
         }
     }

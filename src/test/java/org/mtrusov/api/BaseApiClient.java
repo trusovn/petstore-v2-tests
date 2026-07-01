@@ -15,9 +15,9 @@ public class BaseApiClient {
     protected final AuthProvider authProvider;
 
     public BaseApiClient(ApiConfig apiConfig, AuthProvider authProvider) {
+        this.authProvider = authProvider;
         requestSpecification = buildRequestSpecification(apiConfig);
         responseSpecification = buildResponseSpecification();
-        this.authProvider = authProvider;
     }
 
     protected ResponseSpecification buildResponseSpecification() {

@@ -3,23 +3,27 @@ package org.mtrusov.tests;
 import io.restassured.RestAssured;
 import io.restassured.response.Response;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Named;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
+import org.mtrusov.api.ApiConfig;
 import org.mtrusov.api.InventoryApiClient;
-import org.mtrusov.config.ConfigLoader;
-import org.mtrusov.config.NoAuthProvider;
-import org.mtrusov.config.ValidTokenAuthProvider;
+import org.mtrusov.config.*;
 import org.mtrusov.utils.SchemaValidator;
+
+import java.util.stream.Stream;
 
 import static org.mtrusov.utils.AssertUtils.*;
 
 public class StoreInventoryContractTests {
-    private static InventoryApiClient inventoryApiClientNoAuth;
     private static InventoryApiClient inventoryApiClientAuth;
+    private static ApiConfig config;
 
     @BeforeAll
     static void beforeAll() {
-        var config = ConfigLoader.load().storeApiConfig();
-        inventoryApiClientNoAuth = new InventoryApiClient(config, new NoAuthProvider());
+        config = ConfigLoader.load().storeApiConfig();
         inventoryApiClientAuth = new InventoryApiClient(config, new ValidTokenAuthProvider());
 
         RestAssured.enableLoggingOfRequestAndResponseIfValidationFails();
@@ -29,13 +33,23 @@ public class StoreInventoryContractTests {
     public void getInventoryAuth() {
         Response response = inventoryApiClientAuth.get();
         assertResponseCode(response, 200);
-        SchemaValidator.validateJsonSchema("schemas/InventorySchema.json", response);
+        SchemaValidator.validateJsonSchema("schemas/GetInventoryResponseSchema.json", response);
     }
 
-    @Test
-    public void getInventoryNoAuthFails() {
-        Response response = inventoryApiClientNoAuth.get();
+    @ParameterizedTest
+    @MethodSource("invalidProviders")
+    public void getInventoryNoAuthFails(AuthProvider authProvider) {
+        InventoryApiClient apiClient = new InventoryApiClient(config, authProvider);
+        Response response = apiClient.get();
         assertResponseCode(response, 401);
-        SchemaValidator.validateJsonSchema("schemas/InfoMessageSchema.json", response);
+        SchemaValidator.validateJsonSchema("schemas/ErrorResponseSchema.json", response);
+    }
+
+    private static Stream<Arguments> invalidProviders() {
+        return Stream.of(
+                Arguments.of(Named.of("No api_key header is set", new NoAuthProvider())),
+                Arguments.of(Named.of("Invalid api_key header is provided", new InvalidTokenAuthProvider())),
+                Arguments.of(Named.of("Empty api_key header is provided", new EmptyTokenAuthProvider()))
+        );
     }
 }
