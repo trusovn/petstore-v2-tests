@@ -10,6 +10,7 @@ public record Order(
         Integer quantity,
         @JsonFormat(shape = JsonFormat.Shape.STRING)
         OffsetDateTime shipDate,
-        String status,
+        OrderStatus status,
         Boolean complete
-) {}
+) {
+}

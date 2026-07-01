@@ -17,6 +17,8 @@ import org.mtrusov.utils.SchemaValidator;
 
 import java.util.stream.Stream;
 
+import static org.hamcrest.Matchers.equalTo;
+import static org.junit.jupiter.params.provider.Arguments.argumentSet;
 import static org.mtrusov.utils.AssertUtils.assertInfoMessageFieldCode;
 import static org.mtrusov.utils.AssertUtils.assertInfoMessageFieldMessageContains;
 import static org.mtrusov.utils.AssertUtils.assertInfoMessageFieldMessageNoTraces;
@@ -41,28 +43,68 @@ public class StoreOrdersContractTests {
     class CreateOrder {
         @Test
         public void validBody() {
-            Response response = ordersApiClient.placeOrder(Orders.defaultOrder());
+            Order order = Orders.defaultOrder();
+            Response response = ordersApiClient.placeOrder(order);
             assertResponseCode(response, 200);
             SchemaValidator.validateJsonSchema("schemas/GetCreateOrderSchema.json", response);
             assertOrderShipDateIsValid(response);
+            response.then()
+                    .body("id", equalTo(order.id()))
+                    .body("petId", equalTo(order.petId()))
+                    .body("quantity", equalTo(order.quantity()))
+                    .body("status", equalTo(order.status().value()))
+                    .body("complete", equalTo(order.complete()));
         }
 
-        @Test
-        public void missingBody() {
-            Response response = ordersApiClient.placeOrder(null);
-            assertResponseCode(response, 400);
-            assertInfoMessageFieldCode(response, 400);
+        @ParameterizedTest
+        @MethodSource("invalidOrders")
+        public void invalidBody(Object requestBody, int expectedStatusCode) {
+            Response response = ordersApiClient.placeOrder(requestBody);
+            assertResponseCode(response, expectedStatusCode);
+            assertInfoMessageFieldCode(response, expectedStatusCode);
             assertInfoMessageFieldMessageNoTraces(response);
             SchemaValidator.validateJsonSchema("schemas/ErrorResponseSchema.json", response);
         }
 
-        @Test
-        public void emptyBody() {
-            Response response = ordersApiClient.placeOrder("{}");
-            assertResponseCode(response, 400);
-            assertInfoMessageFieldCode(response, 400);
-            assertInfoMessageFieldMessageNoTraces(response);
-            SchemaValidator.validateJsonSchema("schemas/ErrorResponseSchema.json", response);
+        private static Stream<Arguments> invalidOrders() {
+            return Stream.of(
+                    argumentSet(
+                            "Missing request body",
+                            null, 400
+                    ),
+                    argumentSet(
+                            "Empty request body",
+                            "{}", 400
+                    ),
+                    argumentSet(
+                            "Malformed request body",
+                            "{\"malformed\":}", 400
+                    ),
+                    argumentSet(
+                            "Invalid order ID",
+                            Orders.defaultOrderWithModifiedField("id", "asdf"), 400
+                    ),
+                    argumentSet(
+                            "Invalid order petId",
+                            Orders.defaultOrderWithModifiedField("petId", "asdf"), 400
+                    ),
+                    argumentSet(
+                            "Invalid order quantity",
+                            Orders.defaultOrderWithModifiedField("quantity", "asdf"), 400
+                    ),
+                    argumentSet(
+                            "Invalid order shipDate",
+                            Orders.defaultOrderWithModifiedField("shipDate", "asdf"), 400
+                    ),
+                    argumentSet(
+                            "Invalid order status",
+                            Orders.defaultOrderWithModifiedField("status", "asdf"), 400
+                    ),
+                    argumentSet(
+                            "Invalid order complete",
+                            Orders.defaultOrderWithModifiedField("complete", "asdf"), 400
+                    )
+            );
         }
     }
 
@@ -100,6 +142,8 @@ public class StoreOrdersContractTests {
             assertResponseCode(response, 200);
             SchemaValidator.validateJsonSchema("schemas/GetCreateOrderSchema.json", response);
             assertOrderShipDateIsValid(response);
+            response.then()
+                    .body("id", equalTo(PLACED_ORDER_ID));
         }
 
         @ParameterizedTest
@@ -119,13 +163,16 @@ public class StoreOrdersContractTests {
 
     public static Stream<Arguments> invalidOrderIds() {
         return Stream.of(
-                Arguments.argumentSet(
+                argumentSet(
                         "Non-existing Order ID", String.valueOf(MISSING_ORDER_ID), 404
                 ),
-                Arguments.argumentSet(
+                argumentSet(
                         "Negative Order ID", "-1", 400
                 ),
-                Arguments.argumentSet(
+                argumentSet(
+                        "Zero Order ID", "0", 400
+                ),
+                argumentSet(
                         "Invalid String Order ID", "INVALID", 400
                 )
         );

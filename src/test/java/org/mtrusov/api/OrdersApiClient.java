@@ -25,6 +25,7 @@ public class OrdersApiClient extends BaseApiClient {
                 .post("/order")
                 
                 .then()
+                .log().all()
                 .spec(responseSpecification)
                 .extract().response();
     }

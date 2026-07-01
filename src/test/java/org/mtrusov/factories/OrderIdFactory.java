@@ -1,11 +1,12 @@
-package org.mtrusov.utils;
+package org.mtrusov.factories;
 
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class OrderIdFactory {
     private static final AtomicInteger NEXT_ORDER_ID = new AtomicInteger(9000);
 
-    private OrderIdFactory() {}
+    private OrderIdFactory() {
+    }
 
     public static int nextOrderId() {
         int id = NEXT_ORDER_ID.getAndIncrement();
