@@ -97,7 +97,3 @@ container logs. Inspect the complete log with:
 ```bash
 make logs
 ```
-
-On Apple Silicon, Docker may report that the pinned image is `linux/amd64`.
-Docker Desktop's emulation is sufficient; verified startup does not require an
-explicit Compose platform setting.

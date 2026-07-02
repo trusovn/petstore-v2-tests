@@ -3,9 +3,11 @@ package org.mtrusov.config;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.parallel.Isolated;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+@Isolated
 class ConfigLoaderTest {
     private static final String BASE_URI_PROPERTY = "petstore.baseUri";
     private static final String YAML_BASE_URI = "http://localhost:8080/v2";
