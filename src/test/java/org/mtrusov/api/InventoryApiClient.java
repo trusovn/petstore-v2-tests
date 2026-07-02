@@ -13,12 +13,10 @@ public class InventoryApiClient extends BaseApiClient {
     public Response get() {
         return given()
                 .spec(requestSpecification)
-                .log().all()
                 .when()
                 .get("/inventory")
                 .then()
                 .spec(responseSpecification)
-                .log().all()
                 .extract().response();
     }
 }

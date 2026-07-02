@@ -35,6 +35,22 @@ make stop
 Tests are currently sketches for a future full suite. They use the local URI by
 default and can be run separately with `make test`.
 
+## Test report
+
+Each test run writes Allure results to `target/allure-results`. HTTP requests
+and responses are included as report attachments.
+
+Generate a fresh HTML report:
+
+```bash
+mvn clean test
+make report
+```
+
+The single-file report entry point is
+`target/site/allure-maven-plugin/index.html`. Report generation downloads its
+runtime on first use, then reuses the local cache.
+
 ## Fixtures and test isolation
 
 Committed JSON fixtures are under `test-data/pets/` and `test-data/orders/`.

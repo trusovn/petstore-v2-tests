@@ -3,7 +3,6 @@ package org.mtrusov.api;
 import io.restassured.response.Response;
 import io.restassured.specification.RequestSpecification;
 import org.mtrusov.config.AuthProvider;
-import org.mtrusov.models.Order;
 
 import java.util.Objects;
 
@@ -25,7 +24,6 @@ public class OrdersApiClient extends BaseApiClient {
                 .post("/order")
                 
                 .then()
-                .log().all()
                 .spec(responseSpecification)
                 .extract().response();
     }
@@ -43,7 +41,6 @@ public class OrdersApiClient extends BaseApiClient {
                 .delete("/order/{orderId}")
 
                 .then()
-                .log().all()
                 .spec(responseSpecification)
                 .extract().response();
     }
@@ -61,7 +58,6 @@ public class OrdersApiClient extends BaseApiClient {
                 .get("/order/{orderId}")
 
                 .then()
-                .log().all()
                 .spec(responseSpecification)
                 .extract().response();
     }

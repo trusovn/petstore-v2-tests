@@ -1,6 +1,6 @@
 .DEFAULT_GOAL := help
 
-.PHONY: help start reset seed stop status logs test
+.PHONY: help start reset seed stop status logs test report
 
 help:
 	@printf '%s\n' \
@@ -11,7 +11,8 @@ help:
 		'  make stop    Stop and remove the server' \
 		'  make status  Show the Compose service status' \
 		'  make logs    Follow the server logs' \
-		'  make test    Run the draft Maven test suite'
+		'  make test    Run the draft Maven test suite' \
+		'  make report  Generate an Allure report from the latest test results'
 
 start:
 	./scripts/start-local-petstore.sh
@@ -33,3 +34,6 @@ logs:
 
 test:
 	mvn test
+
+report:
+	mvn allure:report
