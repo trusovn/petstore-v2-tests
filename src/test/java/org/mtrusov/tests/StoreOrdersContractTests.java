@@ -33,8 +33,8 @@ public class StoreOrdersContractTests {
 
     @BeforeAll
     static void beforeAll() {
-        var config = ConfigLoader.load().storeApiConfig();
-        ordersApiClient = new OrdersApiClient(config, new NoAuthProvider());
+        var apiConfig = ConfigLoader.load().storeApiConfig();
+        ordersApiClient = new OrdersApiClient(apiConfig, new NoAuthProvider());
 
         RestAssured.enableLoggingOfRequestAndResponseIfValidationFails();
     }
@@ -47,7 +47,7 @@ public class StoreOrdersContractTests {
             Order order = Orders.defaultOrder();
             Response response = ordersApiClient.placeOrder(order);
             assertResponseCode(response, 200);
-            SchemaValidator.validateJsonSchema("schemas/GetCreateOrderSchema.json", response);
+            SchemaValidator.validateJsonSchema("schemas/OrderResponseSchema.json", response);
             assertOrderShipDateIsValid(response);
             response.then()
                     .body("id", equalTo(order.id()))
@@ -191,7 +191,7 @@ public class StoreOrdersContractTests {
         public void getOrderValidId() {
             Response response = ordersApiClient.get(PLACED_ORDER_ID);
             assertResponseCode(response, 200);
-            SchemaValidator.validateJsonSchema("schemas/GetCreateOrderSchema.json", response);
+            SchemaValidator.validateJsonSchema("schemas/OrderResponseSchema.json", response);
             assertOrderShipDateIsValid(response);
             response.then()
                     .body("id", equalTo(PLACED_ORDER_ID));

@@ -1,4 +1,5 @@
 baseUri: "http://localhost:8080/v2"
+petstoreApiKey: "${PETSTORE_API_KEY}"
 
 basePaths:
   store: "store"

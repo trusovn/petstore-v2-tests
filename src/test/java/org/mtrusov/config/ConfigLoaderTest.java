@@ -6,6 +6,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.parallel.Isolated;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 @Isolated
 class ConfigLoaderTest {
@@ -51,5 +52,18 @@ class ConfigLoaderTest {
 
         assertThat(ConfigLoader.load().baseUri())
                 .isEqualTo(expectedBaseUri);
+    }
+
+    @Test
+    void resolveEnvPlaceholdersReturnsLiteralValueWhenNoPlaceholderPresent() {
+        assertThat(ConfigLoader.resolveEnvPlaceholders("literal-key"))
+                .isEqualTo("literal-key");
+    }
+
+    @Test
+    void resolveEnvPlaceholdersFailsFastWhenReferencedEnvVarIsUnset() {
+        assertThatThrownBy(() -> ConfigLoader.resolveEnvPlaceholders("${DEFINITELY_UNSET_ENV_VAR_PETSTORE_TEST}"))
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessageContaining("DEFINITELY_UNSET_ENV_VAR_PETSTORE_TEST");
     }
 }

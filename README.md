@@ -95,9 +95,30 @@ make logs
 - `PETSTORE_ACCESS_LOG_DIR` changes the host directory mounted at `/var/log`.
 - `-Dpetstore.baseUri=...` overrides the test base URI and takes precedence over
   `PETSTORE_BASE_URI`.
+- `PETSTORE_API_KEY` is the api_key sent in the `api_key` header by the
+  contract tests. It is required for `make verify`; the config loader fails
+  fast if it is unset or blank. The local pinned image accepts the Swagger
+  Petstore default api_key.
 
 The Java configuration precedence is JVM property, environment variable, then
-`src/test/resources/application.config.yaml`.
+`src/test/resources/application.config.yaml`. The api_key is declared in
+`src/test/resources/application.config.yaml` as the placeholder
+`${PETSTORE_API_KEY}` and resolved from the environment, with a repo-root
+`.env` file as a fallback (real environment takes precedence over `.env`).
+There is no JVM-property override for the api_key.
+
+### `.env` file
+
+Secrets such as `PETSTORE_API_KEY` can be placed in a repo-root `.env` file,
+which is gitignored. Copy the committed template and fill in the value:
+
+```bash
+cp .env.example .env
+# then edit .env and set PETSTORE_API_KEY=...
+```
+
+`.env` is optional: an exported `PETSTORE_API_KEY` environment variable is
+sufficient, and takes precedence over `.env`.
 
 Running tests against the shared public service is an explicit opt-in:
 

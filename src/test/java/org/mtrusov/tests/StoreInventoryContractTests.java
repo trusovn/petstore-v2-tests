@@ -19,12 +19,16 @@ import static org.mtrusov.utils.AssertUtils.*;
 
 public class StoreInventoryContractTests {
     private static InventoryApiClient inventoryApiClientAuth;
-    private static ApiConfig config;
+    private static ApiConfig apiConfig;
 
     @BeforeAll
     static void beforeAll() {
-        config = ConfigLoader.load().storeApiConfig();
-        inventoryApiClientAuth = new InventoryApiClient(config, new ValidTokenAuthProvider());
+        var appConfig = ConfigLoader.load();
+        apiConfig = appConfig.storeApiConfig();
+        inventoryApiClientAuth = new InventoryApiClient(
+                apiConfig,
+                new TokenAuthProvider(appConfig.resolvedPetstoreApiKey())
+        );
 
         RestAssured.enableLoggingOfRequestAndResponseIfValidationFails();
     }
@@ -40,7 +44,7 @@ public class StoreInventoryContractTests {
     @MethodSource("invalidProviders")
     @Quarantine
     public void getInventoryNoAuthFails(AuthProvider authProvider) {
-        InventoryApiClient apiClient = new InventoryApiClient(config, authProvider);
+        InventoryApiClient apiClient = new InventoryApiClient(apiConfig, authProvider);
         Response response = apiClient.get();
         assertResponseCode(response, 401);
         SchemaValidator.validateJsonSchema("schemas/ErrorResponseSchema.json", response);
@@ -49,8 +53,8 @@ public class StoreInventoryContractTests {
     private static Stream<Arguments> invalidProviders() {
         return Stream.of(
                 Arguments.of(Named.of("No api_key header is set", new NoAuthProvider())),
-                Arguments.of(Named.of("Invalid api_key header is provided", new InvalidTokenAuthProvider())),
-                Arguments.of(Named.of("Empty api_key header is provided", new EmptyTokenAuthProvider()))
+                Arguments.of(Named.of("Invalid api_key header is provided", new TokenAuthProvider("INVALID_TOKEN"))),
+                Arguments.of(Named.of("Empty api_key header is provided", new TokenAuthProvider("")))
         );
     }
 }
