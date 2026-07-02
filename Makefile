@@ -12,7 +12,7 @@ help:
 		'  make status  Show the Compose service status' \
 		'  make logs    Follow the server logs' \
 		'  make test    Run local unit tests' \
-		'  make verify  Run local unit and SUT tests' \
+		'  make verify  Run SUT tests' \
 		'  make report  Generate an Allure report from the latest test results'
 
 start:
@@ -37,7 +37,7 @@ test:
 	mvn test
 
 verify:
-	mvn verify
+	mvn verify -DskipLocalTests=true
 
 report:
 	mvn allure:report

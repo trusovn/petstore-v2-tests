@@ -38,8 +38,8 @@ Run local unit tests without a Petstore instance:
 make test
 ```
 
-Tests under `src/test/java/org/mtrusov/tests` target the SUT and run during the
-Maven `verify` phase:
+Tests under `src/test/java/org/mtrusov/tests` target the SUT. Run only those
+tests with:
 
 ```bash
 make verify
@@ -102,7 +102,7 @@ The Java configuration precedence is JVM property, environment variable, then
 Running tests against the shared public service is an explicit opt-in:
 
 ```bash
-PETSTORE_BASE_URI=https://petstore.swagger.io/v2 mvn verify
+PETSTORE_BASE_URI=https://petstore.swagger.io/v2 make verify
 ```
 
 Warning: the suite creates and deletes data. Using the public URI mutates shared
