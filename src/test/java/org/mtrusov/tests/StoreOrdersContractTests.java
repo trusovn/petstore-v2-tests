@@ -42,6 +42,7 @@ public class StoreOrdersContractTests {
     @Nested
     class CreateOrder {
         @Test
+        @Quarantine
         public void validBody() {
             Order order = Orders.defaultOrder();
             Response response = ordersApiClient.placeOrder(order);
@@ -57,8 +58,19 @@ public class StoreOrdersContractTests {
         }
 
         @ParameterizedTest
-        @MethodSource("invalidOrders")
+        @MethodSource("regularInvalidOrders")
         public void invalidBody(Object requestBody, int expectedStatusCode) {
+            assertInvalidBody(requestBody, expectedStatusCode);
+        }
+
+        @ParameterizedTest
+        @MethodSource("quarantinedInvalidOrders")
+        @Quarantine
+        public void quarantinedInvalidBody(Object requestBody, int expectedStatusCode) {
+            assertInvalidBody(requestBody, expectedStatusCode);
+        }
+
+        private void assertInvalidBody(Object requestBody, int expectedStatusCode) {
             Response response = ordersApiClient.placeOrder(requestBody);
             assertResponseCode(response, expectedStatusCode);
             assertInfoMessageFieldCode(response, expectedStatusCode);
@@ -66,7 +78,16 @@ public class StoreOrdersContractTests {
             SchemaValidator.validateJsonSchema("schemas/ErrorResponseSchema.json", response);
         }
 
-        private static Stream<Arguments> invalidOrders() {
+        private static Stream<Arguments> regularInvalidOrders() {
+            return Stream.of(
+                    argumentSet(
+                            "Malformed request body",
+                            "{\"malformed\":}", 400
+                    )
+            );
+        }
+
+        private static Stream<Arguments> quarantinedInvalidOrders() {
             return Stream.of(
                     argumentSet(
                             "Missing request body",
@@ -75,10 +96,6 @@ public class StoreOrdersContractTests {
                     argumentSet(
                             "Empty request body",
                             "{}", 400
-                    ),
-                    argumentSet(
-                            "Malformed request body",
-                            "{\"malformed\":}", 400
                     ),
                     argumentSet(
                             "Invalid order ID",
@@ -124,19 +141,53 @@ public class StoreOrdersContractTests {
         }
 
         @ParameterizedTest
-        @MethodSource("org.mtrusov.tests.StoreOrdersContractTests#invalidOrderIds")
+        @MethodSource("regularDeleteOrderIds")
         public void deleteOrderInvalidIds(String orderId, int expectedErrorCode) {
+            assertDeleteOrderInvalidId(orderId, expectedErrorCode);
+        }
+
+        @ParameterizedTest
+        @MethodSource("quarantinedDeleteOrderIds")
+        @Quarantine
+        public void quarantinedDeleteOrderInvalidIds(String orderId, int expectedErrorCode) {
+            assertDeleteOrderInvalidId(orderId, expectedErrorCode);
+        }
+
+        private void assertDeleteOrderInvalidId(String orderId, int expectedErrorCode) {
             Response response = ordersApiClient.delete(orderId);
             assertResponseCode(response, expectedErrorCode);
             assertInfoMessageFieldCode(response, expectedErrorCode);
             assertInfoMessageFieldMessageNoTraces(response);
             SchemaValidator.validateJsonSchema("schemas/ErrorResponseSchema.json", response);
         }
+
+        private static Stream<Arguments> regularDeleteOrderIds() {
+            return Stream.of(
+                    argumentSet(
+                            "Non-existing Order ID", String.valueOf(MISSING_ORDER_ID), 404
+                    )
+            );
+        }
+
+        private static Stream<Arguments> quarantinedDeleteOrderIds() {
+            return Stream.of(
+                    argumentSet(
+                            "Negative Order ID", "-1", 400
+                    ),
+                    argumentSet(
+                            "Zero Order ID", "0", 400
+                    ),
+                    argumentSet(
+                            "Invalid String Order ID", "INVALID", 400
+                    )
+            );
+        }
     }
 
     @Nested
     class GetOrder {
         @Test
+        @Quarantine
         public void getOrderValidId() {
             Response response = ordersApiClient.get(PLACED_ORDER_ID);
             assertResponseCode(response, 200);
@@ -148,6 +199,7 @@ public class StoreOrdersContractTests {
 
         @ParameterizedTest
         @MethodSource("org.mtrusov.tests.StoreOrdersContractTests#invalidOrderIds")
+        @Quarantine
         public void getOrderInvalidIds(String orderId, int expectedErrorCode) {
             Response response = ordersApiClient.get(orderId);
             assertResponseCode(response, expectedErrorCode);

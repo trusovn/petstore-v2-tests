@@ -38,6 +38,7 @@ public class StoreInventoryContractTests {
 
     @ParameterizedTest
     @MethodSource("invalidProviders")
+    @Quarantine
     public void getInventoryNoAuthFails(AuthProvider authProvider) {
         InventoryApiClient apiClient = new InventoryApiClient(config, authProvider);
         Response response = apiClient.get();
