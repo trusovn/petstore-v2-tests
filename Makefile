@@ -1,6 +1,6 @@
 .DEFAULT_GOAL := help
 
-.PHONY: help start reset seed stop status logs test report
+.PHONY: help start reset seed stop status logs test verify report
 
 help:
 	@printf '%s\n' \
@@ -11,7 +11,8 @@ help:
 		'  make stop    Stop and remove the server' \
 		'  make status  Show the Compose service status' \
 		'  make logs    Follow the server logs' \
-		'  make test    Run the draft Maven test suite' \
+		'  make test    Run local unit tests' \
+		'  make verify  Run local unit and SUT tests' \
 		'  make report  Generate an Allure report from the latest test results'
 
 start:
@@ -34,6 +35,9 @@ logs:
 
 test:
 	mvn test
+
+verify:
+	mvn verify
 
 report:
 	mvn allure:report

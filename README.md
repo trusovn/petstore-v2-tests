@@ -32,18 +32,28 @@ remove it explicitly:
 make stop
 ```
 
-Tests are currently sketches for a future full suite. They use the local URI by
-default and can be run separately with `make test`.
+Run local unit tests without a Petstore instance:
+
+```bash
+make test
+```
+
+Tests under `src/test/java/org/mtrusov/tests` target the SUT and run during the
+Maven `verify` phase:
+
+```bash
+make verify
+```
 
 ## Test report
 
 Each test run writes Allure results to `target/allure-results`. HTTP requests
 and responses are included as report attachments.
 
-Generate a fresh HTML report:
+Generate a fresh HTML report for the full suite:
 
 ```bash
-mvn clean test
+mvn clean verify
 make report
 ```
 
@@ -92,7 +102,7 @@ The Java configuration precedence is JVM property, environment variable, then
 Running tests against the shared public service is an explicit opt-in:
 
 ```bash
-PETSTORE_BASE_URI=https://petstore.swagger.io/v2 mvn test
+PETSTORE_BASE_URI=https://petstore.swagger.io/v2 mvn verify
 ```
 
 Warning: the suite creates and deletes data. Using the public URI mutates shared
