@@ -15,14 +15,6 @@ public class Orders {
         return new OrderBuilder().build();
     }
 
-    public static ObjectNode defaultOrderWithout(String... fields) {
-        ObjectNode json = JSON_MAPPER.valueToTree(defaultOrder());
-        for (String field : fields) {
-            json.remove(field);
-        }
-        return json;
-    }
-
     public static ObjectNode defaultOrderWithModifiedField(String field, Object value) {
         ObjectNode json = JSON_MAPPER.valueToTree(defaultOrder());
         json.set(field, JSON_MAPPER.valueToTree(value));

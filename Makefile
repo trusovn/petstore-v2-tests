@@ -42,13 +42,13 @@ test:
 	mvn test
 
 verify:
-	mvn verify -DskipLocalTests=true
+	./scripts/run-with-diagnostics.sh verify -DskipLocalTests=true
 
 verify-regular:
-	mvn verify -DskipLocalTests=true -DskipQuarantineTests=true
+	./scripts/run-with-diagnostics.sh verify -DskipLocalTests=true -DskipQuarantineTests=true
 
 verify-quarantine:
-	mvn verify -DskipLocalTests=true -DskipRegularTests=true
+	./scripts/run-with-diagnostics.sh verify -DskipLocalTests=true -DskipRegularTests=true
 
 report: report-regular
 

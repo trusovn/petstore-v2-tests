@@ -4,7 +4,7 @@ set -euo pipefail
 SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd -- "${SCRIPT_DIR}/.." && pwd)"
 BASE_URI="${PETSTORE_BASE_URI:-http://localhost:${PETSTORE_PORT:-8080}/v2}"
-ACCESS_LOG_DIR="${PETSTORE_ACCESS_LOG_DIR:-${REPO_ROOT}/target/petstore-logs/access}"
+ACCESS_LOG_DIR="${PETSTORE_ACCESS_LOG_DIR:-${REPO_ROOT}/.runtime/petstore-logs/access}"
 reset=false
 
 if [[ "${1:-}" == "--reset" ]]; then

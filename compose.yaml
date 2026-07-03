@@ -8,5 +8,5 @@ services:
       SWAGGER_URL: "http://localhost:${PETSTORE_PORT:-8080}"
     volumes:
       - type: bind
-        source: "${PETSTORE_ACCESS_LOG_DIR:-./target/petstore-logs/access}"
+        source: "${PETSTORE_ACCESS_LOG_DIR:-./.runtime/petstore-logs/access}"
         target: /var/log

@@ -61,6 +61,25 @@ The single-file report entry point is
 `target/site/allure-maven-plugin/index.html`. Report generation downloads its
 runtime on first use, then reuses the local cache.
 
+## Failure diagnostics
+
+`make verify`, `make verify-regular`, and `make verify-quarantine` run through
+`scripts/run-with-diagnostics.sh`. On a build-gating failure (the regular suite;
+quarantined failures do not fail the build) it writes a bundle to
+`target/failure-diagnostics/<timestamp>-<pid>/` containing:
+
+- `maven-console.log` — the Maven transcript
+- `docker-compose.log` — container logs windowed to the run (`--since`)
+- `container-state.txt` — Compose status including exited containers, plus
+  selected `docker inspect` fields (image, start time, exit code, OOM flag,
+  restart count)
+- `access-logs/` — only the Jetty access-log bytes appended during the run
+
+Collection is best-effort and local-only. It is skipped for non-local targets
+(e.g. `PETSTORE_BASE_URI` or `-Dpetstore.baseUri` pointing at a remote host),
+using the same base-URI precedence as the Java config loader, so external runs do
+not attach unrelated local container logs. Maven's exit code is preserved.
+
 ## Fixtures and test isolation
 
 Committed JSON fixtures are under `test-data/pets/` and `test-data/orders/`.
@@ -80,7 +99,7 @@ make seed
 
 ## Logs
 
-Jetty access logs are written to `target/petstore-logs/access/` by default.
+Jetty access logs are written to `.runtime/petstore-logs/access/` by default (gitignored).
 Application output remains available through:
 
 ```bash

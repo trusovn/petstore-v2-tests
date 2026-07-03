@@ -38,3 +38,6 @@ build/
 
 ### Secrets ###
 .env
+
+### Local runtime artifacts (access logs, etc.)
+.runtime/
