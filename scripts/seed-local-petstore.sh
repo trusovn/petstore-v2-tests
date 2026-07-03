@@ -3,7 +3,14 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd -- "${SCRIPT_DIR}/.." && pwd)"
-BASE_URI="${PETSTORE_BASE_URI:-http://localhost:${PETSTORE_PORT:-8080}/v2}"
+. "${SCRIPT_DIR}/petstore-context.sh"
+
+if [[ "${PETSTORE_TARGET}" != "local-compose" ]]; then
+    printf 'seed requires PETSTORE_TARGET=local-compose (current: %s).\n' "${PETSTORE_TARGET}" >&2
+    exit 2
+fi
+
+BASE_URI="${PETSTORE_BASE_URI}"
 
 post_fixture() {
     local endpoint="$1"

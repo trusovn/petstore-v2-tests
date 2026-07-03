@@ -1,6 +1,7 @@
 .DEFAULT_GOAL := help
+SHELL := /usr/bin/env bash
 
-.PHONY: help start reset seed stop status logs test verify verify-regular verify-quarantine report report-regular report-quarantine report-unit
+.PHONY: help start reset seed stop status logs test test-scripts verify verify-regular verify-quarantine report report-regular report-quarantine report-unit
 
 help:
 	@printf '%s\n' \
@@ -12,6 +13,7 @@ help:
 		'  make status  Show the Compose service status' \
 		'  make logs    Follow the server logs' \
 		'  make test    Run local unit tests' \
+		'  make test-scripts  Run the diagnostics/context shell tests' \
 		'  make verify             Run regular and quarantined SUT tests' \
 		'  make verify-regular     Run build-gating SUT tests' \
 		'  make verify-quarantine  Run quarantined SUT tests without failing the build' \
@@ -41,14 +43,17 @@ logs:
 test:
 	mvn test
 
+test-scripts:
+	./scripts/test/run-script-tests.sh
+
 verify:
-	./scripts/run-with-diagnostics.sh verify -DskipLocalTests=true
+	. ./scripts/petstore-context.sh && ./scripts/run-with-diagnostics.sh verify -DskipLocalTests=true -Dpetstore.baseUri=$$PETSTORE_BASE_URI
 
 verify-regular:
-	./scripts/run-with-diagnostics.sh verify -DskipLocalTests=true -DskipQuarantineTests=true
+	. ./scripts/petstore-context.sh && ./scripts/run-with-diagnostics.sh verify -DskipLocalTests=true -Dpetstore.baseUri=$$PETSTORE_BASE_URI -DskipQuarantineTests=true
 
 verify-quarantine:
-	./scripts/run-with-diagnostics.sh verify -DskipLocalTests=true -DskipRegularTests=true
+	. ./scripts/petstore-context.sh && ./scripts/run-with-diagnostics.sh verify -DskipLocalTests=true -Dpetstore.baseUri=$$PETSTORE_BASE_URI -DskipRegularTests=true
 
 report: report-regular
 

@@ -3,8 +3,15 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd -- "${SCRIPT_DIR}/.." && pwd)"
-BASE_URI="${PETSTORE_BASE_URI:-http://localhost:${PETSTORE_PORT:-8080}/v2}"
-ACCESS_LOG_DIR="${PETSTORE_ACCESS_LOG_DIR:-${REPO_ROOT}/.runtime/petstore-logs/access}"
+. "${SCRIPT_DIR}/petstore-context.sh"
+
+if [[ "${PETSTORE_TARGET}" != "local-compose" ]]; then
+    printf 'start/reset requires PETSTORE_TARGET=local-compose (current: %s).\n' "${PETSTORE_TARGET}" >&2
+    exit 2
+fi
+
+BASE_URI="${PETSTORE_BASE_URI}"
+ACCESS_LOG_DIR="${PETSTORE_ACCESS_LOG_DIR}"
 reset=false
 
 if [[ "${1:-}" == "--reset" ]]; then
