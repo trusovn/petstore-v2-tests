@@ -122,6 +122,11 @@
                     <release>25</release>
                 </configuration>
             </plugin>
+            <!--
+                Surefire runs only the non-SUT unit/infrastructure tests during the
+                `test` phase. SUT contract tests live under org/mtrusov/tests/** and
+                are excluded here; they run under Failsafe during `verify`.
+            -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
@@ -141,11 +146,34 @@
                             </excludes>
                         </configuration>
                     </execution>
+                </executions>
+            </plugin>
+            <!--
+                Failsafe runs the SUT contract tests during `verify`. Two executions
+                share the same goals but use separate summary files and report
+                directories so their results never collide:
+
+                  regular-tests    - excludes @Quarantine; gates the build
+                                     (verify goal fails the build on failure;
+                                     failIfNoTests guards against an empty suite).
+                  quarantine-tests  - includes only @Quarantine; testFailureIgnore=true
+                                     so failures never gate the build. Its summary file
+                                     is separate so the regular verify goal cannot
+                                     misattribute quarantine failures.
+
+                Failsafe does not start/stop the SUT; CI (or `make start`) owns the
+                Compose lifecycle and evidence retention.
+            -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-failsafe-plugin</artifactId>
+                <version>${maven.surefire.version}</version>
+                <executions>
                     <execution>
                         <id>regular-tests</id>
-                        <phase>verify</phase>
                         <goals>
-                            <goal>test</goal>
+                            <goal>integration-test</goal>
+                            <goal>verify</goal>
                         </goals>
                         <configuration>
                             <skipTests>${skipRegularTests}</skipTests>
@@ -154,7 +182,8 @@
                             </includes>
                             <excludedGroups>quarantine</excludedGroups>
                             <failIfNoTests>true</failIfNoTests>
-                            <reportsDirectory>${project.build.directory}/surefire-reports/regular</reportsDirectory>
+                            <summaryFile>${project.build.directory}/failsafe-reports/failsafe-summary-regular.xml</summaryFile>
+                            <reportsDirectory>${project.build.directory}/failsafe-reports/regular</reportsDirectory>
                             <systemPropertyVariables>
                                 <allure.results.directory>target/allure-results/regular</allure.results.directory>
                                 <allure.results.clean.before.run>true</allure.results.clean.before.run>
@@ -163,9 +192,9 @@
                     </execution>
                     <execution>
                         <id>quarantine-tests</id>
-                        <phase>verify</phase>
                         <goals>
-                            <goal>test</goal>
+                            <goal>integration-test</goal>
+                            <goal>verify</goal>
                         </goals>
                         <configuration>
                             <skipTests>${skipQuarantineTests}</skipTests>
@@ -174,7 +203,8 @@
                             </includes>
                             <groups>quarantine</groups>
                             <testFailureIgnore>true</testFailureIgnore>
-                            <reportsDirectory>${project.build.directory}/surefire-reports/quarantine</reportsDirectory>
+                            <summaryFile>${project.build.directory}/failsafe-reports/failsafe-summary-quarantine.xml</summaryFile>
+                            <reportsDirectory>${project.build.directory}/failsafe-reports/quarantine</reportsDirectory>
                             <systemPropertyVariables>
                                 <allure.results.directory>target/allure-results/quarantine</allure.results.directory>
                                 <allure.results.clean.before.run>true</allure.results.clean.before.run>

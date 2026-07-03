@@ -12,10 +12,10 @@ help:
 		'  make stop    Stop and remove the server' \
 		'  make status  Show the Compose service status' \
 		'  make logs    Follow the server logs' \
-		'  make test    Run local unit tests' \
-		'  make test-scripts  Run the diagnostics/context shell tests' \
-		'  make verify             Run regular and quarantined SUT tests' \
-		'  make verify-regular     Run build-gating SUT tests' \
+		'  make test    Run local unit tests (Surefire, non-SUT)' \
+		'  make test-scripts  Run the context-resolver shell tests' \
+		'  make verify             Run regular and quarantined SUT tests (Failsafe)' \
+		'  make verify-regular     Run build-gating SUT tests only' \
 		'  make verify-quarantine  Run quarantined SUT tests without failing the build' \
 		'  make report            Generate an Allure report from the latest regular test results' \
 		'  make report-regular     Generate an Allure report from regular (build-gating) test results' \
@@ -46,14 +46,20 @@ test:
 test-scripts:
 	./scripts/test/run-script-tests.sh
 
+# Failsafe runs the SUT contract tests during `verify`. These are thin
+# mvn wrappers. Base URI resolution: an explicit PETSTORE_BASE_URI env wins
+# (ConfigLoader reads it directly, so no -D is passed); otherwise PETSTORE_PORT
+# (default 8080) is translated to -Dpetstore.baseUri so a non-default port is
+# honored. The JVM property takes precedence over the env var, so -D is only
+# passed when PETSTORE_BASE_URI is unset.
 verify:
-	. ./scripts/petstore-context.sh && ./scripts/run-with-diagnostics.sh verify -DskipLocalTests=true -Dpetstore.baseUri=$$PETSTORE_BASE_URI
+	base=""; if [ -z "$${PETSTORE_BASE_URI:-}" ]; then base="-Dpetstore.baseUri=http://localhost:$${PETSTORE_PORT:-8080}/v2"; fi; mvn verify -DskipLocalTests=true $$base
 
 verify-regular:
-	. ./scripts/petstore-context.sh && ./scripts/run-with-diagnostics.sh verify -DskipLocalTests=true -Dpetstore.baseUri=$$PETSTORE_BASE_URI -DskipQuarantineTests=true
+	base=""; if [ -z "$${PETSTORE_BASE_URI:-}" ]; then base="-Dpetstore.baseUri=http://localhost:$${PETSTORE_PORT:-8080}/v2"; fi; mvn verify -DskipLocalTests=true -DskipQuarantineTests=true $$base
 
 verify-quarantine:
-	. ./scripts/petstore-context.sh && ./scripts/run-with-diagnostics.sh verify -DskipLocalTests=true -Dpetstore.baseUri=$$PETSTORE_BASE_URI -DskipRegularTests=true
+	base=""; if [ -z "$${PETSTORE_BASE_URI:-}" ]; then base="-Dpetstore.baseUri=http://localhost:$${PETSTORE_PORT:-8080}/v2"; fi; mvn verify -DskipLocalTests=true -DskipRegularTests=true $$base
 
 report: report-regular
 
