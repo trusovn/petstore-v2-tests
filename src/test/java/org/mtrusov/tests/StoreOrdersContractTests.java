@@ -19,11 +19,9 @@ import java.util.stream.Stream;
 
 import static org.hamcrest.Matchers.equalTo;
 import static org.junit.jupiter.params.provider.Arguments.argumentSet;
-import static org.mtrusov.utils.AssertUtils.assertInfoMessageFieldCode;
-import static org.mtrusov.utils.AssertUtils.assertInfoMessageFieldMessageContains;
-import static org.mtrusov.utils.AssertUtils.assertInfoMessageFieldMessageNoTraces;
-import static org.mtrusov.utils.AssertUtils.assertResponseCode;
+import static org.mtrusov.utils.AssertUtils.*;
 import static org.mtrusov.utils.DateTimeAsserts.assertDateTimeIsValid;
+import static org.mtrusov.utils.OrderAsserts.assertResponseOrderMatches;
 
 public class StoreOrdersContractTests {
     private static final int PLACED_ORDER_ID = 1001;
@@ -49,12 +47,7 @@ public class StoreOrdersContractTests {
             assertResponseCode(response, 200);
             SchemaValidator.validateJsonSchema("schemas/OrderResponseSchema.json", response);
             assertOrderShipDateIsValid(response);
-            response.then()
-                    .body("id", equalTo(order.id()))
-                    .body("petId", equalTo(order.petId()))
-                    .body("quantity", equalTo(order.quantity()))
-                    .body("status", equalTo(order.status().value()))
-                    .body("complete", equalTo(order.complete()));
+            assertResponseOrderMatches(response, order);
         }
 
         @ParameterizedTest
