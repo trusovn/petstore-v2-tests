@@ -1,0 +1,92 @@
+# CI for the local pinned Swagger Petstore contract tests.
+# Runs the same Make gates used locally: unit tests, script tests, then the
+# Docker-backed SUT suite. The pinned local image accepts the non-secret
+# Swagger Petstore default API key used below.
+name: Tests
+
+on:
+  workflow_dispatch:
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    env:
+      PETSTORE_API_KEY: ${{ secrets.PETSTORE_API_KEY }}
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+
+      - uses: actions/setup-java@1bcf9fb12cf4aa7d266a90ae39939e61372fe520 # v5.4.0
+        with:
+          distribution: temurin
+          java-version: 25
+          cache: maven
+          cache-dependency-path: pom.xml
+
+      - name: Non-SUT unit tests
+        run: make test
+
+      - name: Script tests
+        run: make test-scripts
+
+      - name: Start local Petstore
+        run: make start
+
+      - name: SUT contract tests
+        run: make verify
+
+      - name: Capture Compose logs and container state
+        if: failure()
+        run: |
+          mkdir -p target/ci-diagnostics
+          docker compose logs --no-color petstore > target/ci-diagnostics/compose-logs.txt || true
+          docker compose ps > target/ci-diagnostics/container-state.txt || true
+
+      - name: Stop local Petstore
+        if: always()
+        run: make stop || true
+
+      - name: Upload Surefire results
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: surefire-results
+          path: target/surefire-reports/**
+          retention-days: 7
+          if-no-files-found: ignore
+
+      - name: Upload Failsafe results
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: failsafe-results
+          path: target/failsafe-reports/**
+          retention-days: 7
+          if-no-files-found: ignore
+
+      - name: Upload Allure results
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: allure-results
+          path: target/allure-results/**
+          retention-days: 7
+          if-no-files-found: ignore
+
+      - name: Upload diagnostics
+        if: failure()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: diagnostics
+          path: target/ci-diagnostics/**
+          retention-days: 7
+          if-no-files-found: ignore
