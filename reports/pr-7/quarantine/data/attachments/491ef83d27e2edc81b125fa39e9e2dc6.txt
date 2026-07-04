@@ -1,0 +1,38 @@
+Request method:	POST
+Request URI:	http://localhost:8080/v2/store/order
+Proxy:			<none>
+Request params:	<none>
+Query params:	<none>
+Form params:	<none>
+Path params:	<none>
+Headers:		Accept=application/json, application/javascript, text/javascript, text/json
+				Content-Type=application/json
+Cookies:		<none>
+Multiparts:		<none>
+Body:
+{
+    "id": 9005,
+    "petId": 2001,
+    "quantity": 3,
+    "shipDate": "2026-07-07T14:45:03.288Z",
+    "status": "asdf",
+    "complete": false
+}
+
+HTTP/1.1 200 OK
+Date: Tue, 07 Jul 2026 14:45:03 GMT
+Access-Control-Allow-Origin: *
+Access-Control-Allow-Methods: GET, POST, DELETE, PUT
+Access-Control-Allow-Headers: Content-Type, api_key, Authorization
+Content-Type: application/json
+Transfer-Encoding: chunked
+Server: Jetty(9.2.9.v20150224)
+
+{
+    "id": 9005,
+    "petId": 2001,
+    "quantity": 3,
+    "shipDate": "2026-07-07T14:45:03.288+0000",
+    "status": "asdf",
+    "complete": false
+}
