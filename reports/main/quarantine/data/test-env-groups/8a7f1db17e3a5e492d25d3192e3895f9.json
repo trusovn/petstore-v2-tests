@@ -1,0 +1,1 @@
+{"id":"8a7f1db17e3a5e492d25d3192e3895f9","fullName":"org.mtrusov.tests.StoreOrdersContractTests$DeleteOrder.quarantinedDeleteOrderInvalidIds","name":"quarantinedDeleteOrderInvalidIds(String, int) [3] Invalid String Order ID","status":"failed","testResultsByEnv":{"default":"1a28f7cdfc1048a65371f8f32f1bd92e"}}
