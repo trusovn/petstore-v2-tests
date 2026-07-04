@@ -56,7 +56,7 @@ public class StoreOrderTests {
         Response getResponseA = ordersApiClient.get(orderA.id());
         assertResponseCode(getResponseA, HTTP_NOT_FOUND);
         Response getResponseB = ordersApiClient.get(orderB.id());
-        assertResponseCode(getResponseB, HTTP_NOT_FOUND);
+        assertResponseCode(getResponseB, HTTP_OK);
     }
 
     @Test
