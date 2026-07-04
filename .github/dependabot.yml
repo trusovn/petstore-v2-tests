@@ -1,13 +1,10 @@
-# Keeps the pinned GitHub Actions and the Petstore container image current.
-# Actions are pinned by commit SHA (with a # vX.Y.Z comment); Dependabot updates
-# the SHA and the comment together. The image is pinned by digest.
+# Keeps the pinned GitHub Actions current. Actions are pinned by commit SHA
+# (with a # vX.Y.Z comment); Dependabot updates the SHA and the comment together.
+# The Petstore image is intentionally pinned by digest in compose.yaml for
+# deterministic contract tests and is NOT auto-updated here.
 version: 2
 updates:
   - package-ecosystem: "github-actions"
-    directory: "/"
-    schedule:
-      interval: "weekly"
-  - package-ecosystem: "docker"
     directory: "/"
     schedule:
       interval: "weekly"
