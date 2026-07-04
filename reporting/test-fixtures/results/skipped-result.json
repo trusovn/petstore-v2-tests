@@ -1,0 +1,16 @@
+{
+  "uuid": "33333333-3333-3333-3333-333333333333",
+  "historyId": "ghi",
+  "fullName": "org.mtrusov.ExampleTests.skipped",
+  "name": "skipped()",
+  "status": "skipped",
+  "stage": "finished",
+  "statusDetails": {},
+  "labels": [],
+  "links": [],
+  "attachments": [],
+  "parameters": [],
+  "steps": [],
+  "start": 1783097866000,
+  "stop": 1783097866001
+}

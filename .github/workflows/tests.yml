@@ -6,6 +6,8 @@ name: Tests
 
 on:
   workflow_dispatch:
+  push:
+    branches: [main]
   pull_request:
     branches: [main]
 
@@ -80,7 +82,7 @@ jobs:
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: allure-results
-          path: target/allure-results/**
+          path: target/allure-results
           retention-days: 7
           if-no-files-found: ignore
 

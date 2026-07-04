@@ -8,3 +8,13 @@ updates:
     directory: "/"
     schedule:
       interval: "weekly"
+
+  # Keep the pinned Allure Report CLI (reporting/package.json) current.
+  # allure is pinned exactly; Dependabot opens a PR to bump it with an updated
+  # package-lock.json.
+  - package-ecosystem: "npm"
+    directory: "/reporting"
+    schedule:
+      interval: "weekly"
+    allow:
+      - dependency-name: "allure"
