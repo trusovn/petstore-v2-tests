@@ -18,6 +18,50 @@ export const HISTORY_LIMIT = 20;
 export const PAGES_BASE_URL = 'https://trusovn.github.io/petstore-v2-tests/';
 export const REPO_FULL_NAME = 'trusovn/petstore-v2-tests';
 
+// Shared, self-contained, CSP-safe styling for the generated report pages.
+// Inline only (no external fonts/images) so it renders under GitHub Pages and
+// in offline bundles without network access.
+const REPORT_STYLE = `
+  :root {
+    --fg: #1f2328; --muted: #656d76; --border: #d0d7de; --head: #f6f8fa;
+    --pass: #1a7f37; --fail: #cf222e; --flaky: #9a6700; --link: #0969da;
+  }
+  html { background: #fff; }
+  body {
+    max-width: 1100px; margin: 0 auto; padding: 24px 16px 64px;
+    font: 14px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+      Helvetica, Arial, sans-serif;
+    color: var(--fg); background: #fff;
+  }
+  h1 { font-size: 1.25rem; margin: 0 0 4px; }
+  h1 + p { margin: 0 0 4px; font-size: 0.875rem; color: var(--muted); }
+  a { color: var(--link); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  section { margin-top: 28px; }
+  section > h2 {
+    font-size: 1rem; margin: 0 0 12px; padding-bottom: 6px;
+    border-bottom: 1px solid var(--border);
+  }
+  table { width: 100%; border-collapse: collapse; }
+  th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--border); vertical-align: top; }
+  th { background: var(--head); font-weight: 600; white-space: nowrap; }
+  tbody tr:hover { background: var(--head); }
+  td.ref { font-weight: 600; white-space: nowrap; }
+  td.updated { color: var(--muted); font-variant-numeric: tabular-nums; white-space: nowrap; }
+  ul { padding-left: 20px; }
+  li { margin: 6px 0; }
+  .gate, .suite { font-weight: 600; white-space: nowrap; }
+  .gate-passed, .suite-passed { color: var(--pass); }
+  .gate-failed, .suite-failed { color: var(--fail); }
+  .gate-other { color: var(--muted); }
+  .suite-flaky { color: var(--flaky); }
+  .suite-empty, .suite-not-run, .suite-missing, .suite-neutral { color: var(--muted); font-weight: 400; }
+  @media (max-width: 720px) {
+    td.updated { display: none; }
+    th, td { padding: 6px 8px; }
+  }
+`.trim();
+
 export const LIMITS = Object.freeze({
   extractedArtifactBytes: 100 * 1024 * 1024,
   generatedStateTreeBytes: 250 * 1024 * 1024,
@@ -403,7 +447,9 @@ export function renderLandingPage(refs) {
   const header =
     '<!DOCTYPE html>\n' +
     '<html lang="en">\n<head>\n<meta charset="utf-8">\n' +
+    '<meta name="viewport" content="width=device-width, initial-scale=1">\n' +
     `<title>${escapeHtml(REPO_FULL_NAME)} CI reports</title>\n` +
+    `<style>\n${REPORT_STYLE}\n</style>\n` +
     '</head>\n<body>\n' +
     `<h1>${escapeHtml(REPO_FULL_NAME)} CI reports</h1>\n` +
     `<p><a href="https://github.com/${escapeHtml(REPO_FULL_NAME)}/actions">Actions</a></p>\n`;
@@ -424,18 +470,31 @@ export function renderLandingPage(refs) {
   return body + '</body>\n</html>\n';
 }
 
+function gateClass(conclusion) {
+  if (conclusion === 'success') return 'gate-passed';
+  if (conclusion === 'failure') return 'gate-failed';
+  return 'gate-other';
+}
+
+function suiteClass(ref, suite) {
+  const s = ref.suites[suite];
+  if (suite === 'quarantine') return 'suite-neutral';
+  if (s.availability === 'generated') return `suite-${s.status || 'empty'}`;
+  return `suite-${s.availability}`;
+}
+
 function renderRefRow(ref) {
   const gate = ref.source.conclusion === 'success' ? 'passed' : ref.source.conclusion === 'failure' ? 'failed' : ref.source.conclusion;
   const updated = ref.source.completedAt || '';
   const runLink = ref.source.url ? `<a href="${escapeHtml(ref.source.url)}">run</a>` : '';
   return (
     '<tr>' +
-    `<td>${escapeHtml(ref.displayName)}</td>` +
-    `<td>${escapeHtml(gate)}</td>` +
-    `<td>${escapeHtml(updated)}</td>` +
-    `<td>${suiteCellHtml(ref, 'unit')}</td>` +
-    `<td>${suiteCellHtml(ref, 'regular')}</td>` +
-    `<td>${suiteCellHtml(ref, 'quarantine')}</td>` +
+    `<td class="ref">${escapeHtml(ref.displayName)}</td>` +
+    `<td class="gate ${gateClass(ref.source.conclusion)}">${escapeHtml(gate)}</td>` +
+    `<td class="updated">${escapeHtml(updated)}</td>` +
+    `<td class="suite ${suiteClass(ref, 'unit')}">${suiteCellHtml(ref, 'unit')}</td>` +
+    `<td class="suite ${suiteClass(ref, 'regular')}">${suiteCellHtml(ref, 'regular')}</td>` +
+    `<td class="suite ${suiteClass(ref, 'quarantine')}">${suiteCellHtml(ref, 'quarantine')}</td>` +
     `<td>${runLink}</td>` +
     '</tr>'
   );
@@ -566,12 +625,14 @@ export function renderOfflineRootIndex(suitesAvailability) {
   const items = SUITES.map((suite) => {
     const av = suitesAvailability[suite];
     if (av === 'generated') {
-      return `<li><a href="./${suite}/index.html">${escapeHtml(suite)}</a></li>`;
+      return `<li class="suite suite-neutral"><a href="./${suite}/index.html">${escapeHtml(suite)}</a></li>`;
     }
-    return `<li>${escapeHtml(suite)} — not run</li>`;
+    return `<li class="suite suite-not-run">${escapeHtml(suite)} — not run</li>`;
   }).join('\n');
   return (
     '<!DOCTYPE html>\n<html lang="en">\n<head><meta charset="utf-8">' +
+    '<meta name="viewport" content="width=device-width, initial-scale=1">' +
+    `<style>\n${REPORT_STYLE}\n</style>` +
     '<title>Petstore CI report (offline)</title></head>\n<body>\n' +
     '<h1>Petstore CI report (offline)</h1>\n' +
     '<p>This is a downloadable offline bundle. Open a suite report below.</p>\n' +
