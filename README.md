@@ -61,6 +61,46 @@ The single-file report entry point is
 `target/site/allure-maven-plugin/index.html`. Report generation downloads its
 runtime on first use, then reuses the local cache.
 
+## CI test reporting
+
+CI publishes browsable Allure reports to GitHub Pages, separate from the
+merge-gating `Tests` workflow. The reporting workflow (`Reports`) never gates a
+merge; `Tests / test` remains the only required check.
+
+- Public dashboard: <https://trusovn.github.io/petstore-v2-tests/>
+- Separate reports per suite (`unit`, `regular`, `quarantine`) and per ref
+  (`main`, `pr-<number>`).
+- Allure history is kept per `(ref, suite)` and capped at 20 launches.
+- A PR gets one updatable comment with unit/regular counts, bounded failure
+  details, and links to all three suite reports. Quarantine is reported as
+  `non-gating; stats excluded` — it stays browsable but contributes no
+  dashboard, manifest, comment, or aggregate statistics.
+- Closing a PR keeps its latest reports and history for seven days; a daily
+  schedule removes expired PR state after that window.
+- Manually dispatched `Tests` runs (workflow_dispatch) produce a downloadable,
+  seven-day, offline-viewable HTML bundle instead of a Pages entry. Unzip it
+  and open the root `index.html` in a browser; each suite is a standalone
+  single-file report.
+
+### Local single-file vs CI multi-file reports
+
+Locally, `make report` (the `allure-maven` plugin) generates a single-file
+report at `target/site/allure-maven-plugin/index.html`. CI instead generates
+multi-file Allure reports (one per suite) for GitHub Pages, with separate
+per-`(ref, suite)` JSONL history. The CI report generator is pinned to Allure
+Report 3.14.1 via `reporting/package-lock.json` (`npm ci --prefix reporting`),
+independent of the Maven-side Allure Java adapters. The local single-file
+output layout is unchanged.
+
+### Public data exposure
+
+> **Warning:** GitHub Pages for this repository is public. CI reports may
+> contain diagnostic request/response attachments, captured failure output,
+> and stack traces. Do not run CI against fixtures or secrets you do not want
+> public. The current failure logger retains the first four characters of the
+> API key in captured stdout; full masking plus a fail-closed pre-upload secret
+> scan is a planned follow-up.
+
 ## Test execution model
 
 `mvn test` runs only the non-SUT unit/infrastructure tests via Surefire.

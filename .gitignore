@@ -41,3 +41,6 @@ build/
 
 ### Local runtime artifacts (access logs, etc.)
 .runtime/
+
+### Reporting (Node helpers) ###
+reporting/node_modules/

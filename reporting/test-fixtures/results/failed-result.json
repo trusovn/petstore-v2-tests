@@ -1,0 +1,20 @@
+{
+  "uuid": "22222222-2222-2222-2222-222222222222",
+  "historyId": "def",
+  "testCaseId": "[engine:junit-jupiter]/[class:org.mtrusov.StoreOrderTests]/[method:createsOrder()]",
+  "fullName": "org.mtrusov.StoreOrderTests.createsOrder",
+  "name": "createsOrder()",
+  "status": "failed",
+  "stage": "finished",
+  "statusDetails": {
+    "message": "expected status code 400 but was 200\nexpected:<400> but was:<200>",
+    "trace": "org.opentest4j.AssertionFailedError: expected:<400>\n\tat org.mtrusov.StoreOrderTests.createsOrder(StoreOrderTests.java:42)"
+  },
+  "labels": [],
+  "links": [],
+  "attachments": [],
+  "parameters": [],
+  "steps": [],
+  "start": 1783097866000,
+  "stop": 1783097866001
+}

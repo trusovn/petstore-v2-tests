@@ -1,0 +1,487 @@
+# Non-gating CI test reporting and GitHub Pages publishing.
+#
+# Triggered by completed `Tests` runs (workflow_run), pull_request
+# close/reopen, and a daily cleanup schedule. It is intentionally separate from
+# the `Tests` workflow and never gates a merge. `Tests / test` remains the only
+# required gate.
+#
+# Permission boundaries (see plan section 6.1):
+#   prepare  : actions:read, contents:read, pull-requests:read  (parses data)
+#   persist  : contents:write                                   (no parsing)
+#   deploy   : pages:write, id-token:write                      (no parsing)
+#   comment  : pull-requests:write, contents:read               (no parsing)
+#
+# Top-level permissions are empty; each job declares its own scope.
+name: Reports
+
+on:
+  workflow_run:
+    workflows: [Tests]
+    types: [completed]
+  pull_request:
+    types: [closed, reopened]
+  schedule:
+    - cron: "23 3 * * *"
+
+permissions: {}
+
+concurrency:
+  group: published-test-reports
+
+env:
+  PAGES_BASE_URL: "https://trusovn.github.io/petstore-v2-tests/"
+
+jobs:
+  prepare:
+    # Skip cancelled source runs; accept pull_request/push/workflow_dispatch sources.
+    if: |
+      github.event_name != 'workflow_run' ||
+      (github.event.workflow_run.conclusion != 'cancelled' &&
+       contains(fromJSON('["pull_request","push","workflow_dispatch"]'), github.event.workflow_run.event))
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    permissions:
+      actions: read
+      contents: read
+      pull-requests: read
+    outputs:
+      slug: ${{ steps.prep.outputs.slug }}
+      prNumber: ${{ steps.prep.outputs.prNumber }}
+      decision: ${{ steps.prep.outputs.decision }}
+      needsPages: ${{ steps.prep.outputs.needsPages }}
+      needsDeploy: ${{ steps.prep.outputs.needsDeploy }}
+      needsComment: ${{ steps.prep.outputs.needsComment }}
+      ghpagesSha: ${{ steps.ghpages.outputs.sha }}
+      reportEvent: ${{ steps.meta.outputs.reportEvent }}
+    steps:
+      - name: Resolve report event
+        id: meta
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          EVENT_NAME: ${{ github.event_name }}
+          WR_EVENT: ${{ github.event.workflow_run.event }}
+          WR_CONCLUSION: ${{ github.event.workflow_run.conclusion }}
+          WR_HEAD_BRANCH: ${{ github.event.workflow_run.head_branch }}
+          WR_HEAD_REPO_FULL: ${{ github.event.workflow_run.head_repository.full_name }}
+          WR_RUN_ID: ${{ github.event.workflow_run.id }}
+          WR_RUN_NUMBER: ${{ github.event.workflow_run.run_number }}
+          WR_RUN_ATTEMPT: ${{ github.event.workflow_run.run_attempt }}
+          WR_HEAD_SHA: ${{ github.event.workflow_run.head_sha }}
+          WR_HTML_URL: ${{ github.event.workflow_run.html_url }}
+          WR_UPDATED_AT: ${{ github.event.workflow_run.updated_at }}
+          WR_PRS_JSON: ${{ toJSON(github.event.workflow_run.pull_requests) }}
+          PR_ACTION: ${{ github.event.action }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          PR_CLOSED_AT: ${{ github.event.pull_request.closed_at }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          if [ "$EVENT_NAME" = "workflow_run" ]; then
+            {
+              echo "reportEvent=workflow_run"
+              echo "sourceEvent=$WR_EVENT"
+              echo "sourceConclusion=$WR_CONCLUSION"
+              echo "sourceHeadBranch=$WR_HEAD_BRANCH"
+              echo "sourceHeadRepoFull=$WR_HEAD_REPO_FULL"
+              echo "sourceRunId=$WR_RUN_ID"
+              echo "sourceRunNumber=$WR_RUN_NUMBER"
+              echo "sourceRunAttempt=$WR_RUN_ATTEMPT"
+              echo "sourceHeadSha=$WR_HEAD_SHA"
+              echo "sourceRunUrl=$WR_HTML_URL"
+              echo "sourceCompletedAt=$WR_UPDATED_AT"
+              echo "prNumbersFile=$RUNNER_TEMP/pr-numbers.json"
+            } >> "$GITHUB_OUTPUT"
+            printf '%s' "$WR_PRS_JSON" > "$RUNNER_TEMP/pr-numbers.json"
+            # If no associated PR, try to resolve from head_sha via the API.
+            if [ "$WR_EVENT" = "pull_request" ]; then
+              COUNT=$(printf '%s' "$WR_PRS_JSON" | jq 'length')
+              if [ "$COUNT" = "0" ]; then
+                gh api "repos/$GH_REPO/commits/$WR_HEAD_SHA/pulls" > "$RUNNER_TEMP/pr-numbers.json"
+                NUM=$(jq 'length' "$RUNNER_TEMP/pr-numbers.json")
+                echo "Found $NUM PR(s) for sha; will resolve in node."
+              fi
+            fi
+          elif [ "$EVENT_NAME" = "pull_request" ]; then
+            {
+              echo "reportEvent=pull_request"
+              echo "prAction=$PR_ACTION"
+              echo "prNumber=$PR_NUMBER"
+              echo "prClosedAt=$PR_CLOSED_AT"
+            } >> "$GITHUB_OUTPUT"
+          else
+            echo "reportEvent=schedule" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Check out default branch (reporting scripts)
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          ref: ${{ github.event.repository.default_branch }}
+          persist-credentials: false
+
+      - name: Check out gh-pages state (read-only)
+        continue-on-error: true
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          ref: gh-pages
+          path: ghpages-state
+          persist-credentials: false
+
+      - name: Record gh-pages SHA
+        id: ghpages
+        run: |
+          if [ -d ghpages-state/.git ]; then
+            cd ghpages-state
+            echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+          else
+            echo "sha=" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Set up Node
+        uses: actions/setup-node@2028fbc5c25fe9cf00d9f06a71cc4710d4507903 # v6.0.0
+        with:
+          node-version: "24"
+          cache: npm
+          cache-dependency-path: reporting/package-lock.json
+
+      - name: Install reporting dependencies
+        run: npm ci --prefix reporting
+
+      - name: List source-run artifacts
+        id: artifacts
+        if: steps.meta.outputs.reportEvent == 'workflow_run'
+        run: |
+          set -euo pipefail
+          NAMES=$(gh api "repos/${{ github.repository }}/actions/runs/${{ steps.meta.outputs.sourceRunId }}/artifacts" --paginate --jq '.artifacts[].name' 2>/dev/null || true)
+          if echo "$NAMES" | grep -qx "allure-results"; then
+            echo "hasAllure=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "hasAllure=false" >> "$GITHUB_OUTPUT"
+          fi
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Download allure-results artifact
+        if: steps.meta.outputs.reportEvent == 'workflow_run' && steps.artifacts.outputs.hasAllure == 'true'
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          run-id: ${{ steps.meta.outputs.sourceRunId }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          name: allure-results
+          path: ${{ runner.temp }}/allure-artifact
+
+      - name: Prepare reports and state
+        id: prep
+        # Step outputs and context are bound via env: and referenced as $VAR in
+        # the shell/prefix below to avoid interpolating attacker-influenced
+        # values (e.g. sourceHeadBranch) into the shell.
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          META_REPORT_EVENT: ${{ steps.meta.outputs.reportEvent }}
+          META_SOURCE_EVENT: ${{ steps.meta.outputs.sourceEvent }}
+          META_SOURCE_CONCLUSION: ${{ steps.meta.outputs.sourceConclusion }}
+          META_SOURCE_HEAD_BRANCH: ${{ steps.meta.outputs.sourceHeadBranch }}
+          META_SOURCE_HEAD_REPO_FULL: ${{ steps.meta.outputs.sourceHeadRepoFull }}
+          META_GITHUB_REPOSITORY: ${{ github.repository }}
+          META_SOURCE_RUN_ID: ${{ steps.meta.outputs.sourceRunId }}
+          META_SOURCE_RUN_NUMBER: ${{ steps.meta.outputs.sourceRunNumber }}
+          META_SOURCE_RUN_ATTEMPT: ${{ steps.meta.outputs.sourceRunAttempt }}
+          META_SOURCE_HEAD_SHA: ${{ steps.meta.outputs.sourceHeadSha }}
+          META_SOURCE_RUN_URL: ${{ steps.meta.outputs.sourceRunUrl }}
+          META_SOURCE_COMPLETED_AT: ${{ steps.meta.outputs.sourceCompletedAt }}
+          META_PR_NUMBER: ${{ steps.meta.outputs.prNumber }}
+          META_PR_NUMBERS_FILE: ${{ steps.meta.outputs.prNumbersFile }}
+          META_PR_ACTION: ${{ steps.meta.outputs.prAction }}
+          META_PR_CLOSED_AT: ${{ steps.meta.outputs.prClosedAt }}
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/state-out" "$RUNNER_TEMP/pages-out" "$RUNNER_TEMP/offline-out"
+          ARTIFACT_DIR=""
+          if [ -d "$RUNNER_TEMP/allure-artifact" ]; then
+            ARTIFACT_DIR="$RUNNER_TEMP/allure-artifact"
+          fi
+          EXISTING="$RUNNER_TEMP/existing-state"
+          mkdir -p "$EXISTING"
+          if [ -d ghpages-state/_state ]; then
+            cp -a ghpages-state/_state/. "$EXISTING/"
+          fi
+          GITHUB_OUTPUT="$GITHUB_OUTPUT" \
+          REPORT_EVENT="$META_REPORT_EVENT" \
+          SOURCE_EVENT="$META_SOURCE_EVENT" \
+          SOURCE_CONCLUSION="$META_SOURCE_CONCLUSION" \
+          SOURCE_HEAD_BRANCH="$META_SOURCE_HEAD_BRANCH" \
+          SOURCE_HEAD_REPO_FULL="$META_SOURCE_HEAD_REPO_FULL" \
+          GITHUB_REPOSITORY="$META_GITHUB_REPOSITORY" \
+          SOURCE_RUN_ID="$META_SOURCE_RUN_ID" \
+          SOURCE_RUN_NUMBER="$META_SOURCE_RUN_NUMBER" \
+          SOURCE_RUN_ATTEMPT="$META_SOURCE_RUN_ATTEMPT" \
+          SOURCE_HEAD_SHA="$META_SOURCE_HEAD_SHA" \
+          SOURCE_RUN_URL="$META_SOURCE_RUN_URL" \
+          SOURCE_COMPLETED_AT="$META_SOURCE_COMPLETED_AT" \
+          PR_NUMBER="$META_PR_NUMBER" \
+          PR_NUMBERS_FILE="$META_PR_NUMBERS_FILE" \
+          PR_ACTION="$META_PR_ACTION" \
+          PR_CLOSED_AT="$META_PR_CLOSED_AT" \
+          ALLURE_ARTIFACT_DIR="$ARTIFACT_DIR" \
+          EXISTING_STATE_DIR="$EXISTING" \
+          EXISTING_PAGES_DIR="$GITHUB_WORKSPACE/ghpages-state" \
+          OUT_STATE_DIR="$RUNNER_TEMP/state-out" \
+          OUT_PAGES_DIR="$RUNNER_TEMP/pages-out" \
+          OUT_OFFLINE_DIR="$RUNNER_TEMP/offline-out" \
+          COMMENT_BODY_FILE="$RUNNER_TEMP/comment-body.md" \
+          ALLURE_HISTORY_LIMIT="20" \
+          WORK_ROOT="$RUNNER_TEMP/allure-work" \
+          node reporting/report-prepare.mjs
+          # Surface orchestrator outputs (already written to GITHUB_OUTPUT by node).
+
+      - name: Validate prepared tree (symlink/size)
+        run: |
+          set -euo pipefail
+          # Reject symlinks anywhere in the prepared outputs.
+          if find "$RUNNER_TEMP/pages-out" "$RUNNER_TEMP/state-out" -type l 2>/dev/null | grep -q .; then
+            echo "Symlink found in prepared tree"; exit 1
+          fi
+          # Enforce generated-state size cap (250 MiB).
+          SZ=$(du -sb "$RUNNER_TEMP/state-out" "$RUNNER_TEMP/pages-out" 2>/dev/null | awk '{s+=$1} END{print s+0}')
+          if [ "$SZ" -gt 262144000 ]; then
+            echo "Prepared tree exceeds 250 MiB: $SZ"; exit 1
+          fi
+          # Enforce extracted-artifact cap (100 MiB) on the downloaded artifact.
+          if [ -d "$RUNNER_TEMP/allure-artifact" ]; then
+            ASZ=$(du -sb "$RUNNER_TEMP/allure-artifact" 2>/dev/null | awk '{print $1+0}')
+            if [ "$ASZ" -gt 104857600 ]; then
+              echo "Downloaded artifact exceeds 100 MiB: $ASZ"; exit 1
+            fi
+          fi
+
+      - name: Upload report-pages artifact
+        if: steps.prep.outputs.needsPages == 'true'
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: report-pages
+          path: ${{ runner.temp }}/pages-out
+          retention-days: 1
+          if-no-files-found: error
+
+      - name: Upload report-state artifact
+        if: steps.prep.outputs.needsPages == 'true'
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: report-state
+          path: ${{ runner.temp }}/state-out
+          retention-days: 1
+          if-no-files-found: warn
+
+      - name: Upload offline bundle artifact
+        id: offline
+        if: steps.prep.outputs.needsPages == 'false' && steps.meta.outputs.reportEvent == 'workflow_run' && steps.meta.outputs.sourceEvent == 'workflow_dispatch'
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: allure-html-${{ steps.meta.outputs.sourceRunId }}
+          path: ${{ runner.temp }}/offline-out
+          retention-days: 7
+          if-no-files-found: error
+
+      - name: Upload comment-body artifact
+        if: steps.prep.outputs.needsComment == 'true'
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: comment-body
+          path: ${{ runner.temp }}/comment-body.md
+          retention-days: 1
+          if-no-files-found: error
+
+      - name: Job summary
+        if: always()
+        run: |
+          {
+            echo "### Reports — prepare"
+            echo
+            echo "decision: ${{ steps.prep.outputs.decision }}"
+            echo "slug: ${{ steps.prep.outputs.slug }}"
+            echo "needsPages: ${{ steps.prep.outputs.needsPages }}"
+            echo "needsDeploy: ${{ steps.prep.outputs.needsDeploy }}"
+            echo "needsComment: ${{ steps.prep.outputs.needsComment }}"
+            echo "summary: ${{ steps.prep.outputs.summary }}"
+            if [ -n "${{ steps.offline.outputs.artifact-url }}" ]; then
+              echo
+              echo "Offline bundle (7-day artifact): ${{ steps.offline.outputs.artifact-url }}"
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"
+
+  persist:
+    needs: prepare
+    if: needs.prepare.outputs.needsPages == 'true'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      contents: write
+    steps:
+      - name: Check out gh-pages
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          ref: gh-pages
+          fetch-depth: 1
+          persist-credentials: true
+
+      - name: Verify recorded SHA still matches
+        run: |
+          set -euo pipefail
+          CURRENT=$(git rev-parse HEAD)
+          RECORDED="${{ needs.prepare.outputs.ghpagesSha }}"
+          if [ -z "$RECORDED" ]; then
+            echo "No recorded gh-pages SHA; first publication."
+          elif [ "$CURRENT" != "$RECORDED" ]; then
+            echo "gh-pages changed concurrently: $CURRENT != $RECORDED"
+            echo "Re-run the Reports workflow to reconcile."
+            exit 1
+          fi
+
+      - name: Download prepared artifacts
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: report-pages
+          path: ${{ runner.temp }}/pages-in
+      - name: Download state artifact
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: report-state
+          path: ${{ runner.temp }}/state-in
+
+      - name: Re-validate tree (symlink/size)
+        run: |
+          set -euo pipefail
+          if find "$RUNNER_TEMP/pages-in" "$RUNNER_TEMP/state-in" -type l 2>/dev/null | grep -q .; then
+            echo "Symlink in incoming tree"; exit 1
+          fi
+          SZ=$(du -sb "$RUNNER_TEMP/pages-in" "$RUNNER_TEMP/state-in" 2>/dev/null | awk '{s+=$1} END{print s+0}')
+          if [ "$SZ" -gt 262144000 ]; then
+            echo "Incoming tree exceeds 250 MiB: $SZ"; exit 1
+          fi
+
+      - name: Replace working tree, amend, push with exact lease
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          # Remove existing tracked content except .git.
+          find . -mindepth 1 -maxdepth 1 ! -name '.git' -exec rm -rf {} +
+          # Restore index.html, manifest.json, reports/ from pages-in.
+          cp -a "$RUNNER_TEMP/pages-in/." .
+          # Restore _state/ from state-in.
+          if [ -d "$RUNNER_TEMP/state-in" ]; then
+            mkdir -p _state
+            cp -a "$RUNNER_TEMP/state-in/." _state/
+          fi
+          # Symlink guard on the final tree too.
+          if find . -path ./.git -prune -o -type l -print | grep -q .; then
+            echo "Symlink in final tree"; exit 1
+          fi
+          git add -A
+          RECORDED="${{ needs.prepare.outputs.ghpagesSha }}"
+          if ! git diff --cached --quiet; then
+            # gh-pages is kept as a single root/snapshot commit; always amend so
+            # the branch stays one commit (see one-time setup in docs).
+            git commit --amend -m "petstore-ci-report snapshot" --allow-empty
+            # Force-with-lease against the recorded SHA; on first run RECORDED is empty.
+            if [ -n "$RECORDED" ]; then
+              git push --force-with-lease=refs/heads/gh-pages:"$RECORDED" origin HEAD:gh-pages
+            else
+              git push --force origin HEAD:gh-pages
+            fi
+          else
+            echo "No changes to snapshot."
+          fi
+
+  deploy:
+    needs: [prepare, persist]
+    if: needs.prepare.outputs.needsDeploy == 'true'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Download report-pages
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: report-pages
+          path: ${{ runner.temp }}/pages-in
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5.0.0
+        with:
+          path: ${{ runner.temp }}/pages-in
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@cd2ce8fcbc39b97be8ca5fce6e763baed58fa128 # v5.0.0
+
+  comment:
+    # Run after deploy so the comment can reflect whether Pages actually went live.
+    needs: [prepare, deploy]
+    if: always() && needs.prepare.outputs.needsComment == 'true'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    permissions:
+      pull-requests: write
+      contents: read
+    steps:
+      - name: Download comment body
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: comment-body
+          path: ${{ runner.temp }}/comment
+        continue-on-error: true
+      - name: Read comment body
+        id: body
+        run: |
+          if [ -f "$RUNNER_TEMP/comment/comment-body.md" ]; then
+            echo "found=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "found=false" >> "$GITHUB_OUTPUT"
+          fi
+      - name: Update marked PR comment
+        if: steps.body.outputs.found == 'true'
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+        with:
+          script: |
+            const fs = require('fs');
+            let body = fs.readFileSync(`${process.env.RUNNER_TEMP}/comment/comment-body.md`, 'utf8');
+            // Reflect Pages deployment outcome so the comment never claims a
+            // report is live merely because generation succeeded.
+            const deployResult = `${{ needs.deploy.result }}`;
+            if (deployResult !== 'success') {
+              body += '\n\n> :warning: Pages deployment did not complete successfully' +
+                (deployResult === 'skipped' ? ' (skipped)' : '') +
+                '; the linked Pages report may not be live yet. See the Reports workflow run.';
+            }
+            // Enforce the 50,000-character comment cap.
+            if (body.length > 50000) {
+              body = body.slice(0, 49997) + '...';
+            }
+            const prNumber = Number('${{ needs.prepare.outputs.prNumber }}');
+            const MARKER = '<!-- petstore-ci-report -->';
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: prNumber,
+            });
+            const existing = comments.find((c) => c.user.type === 'Bot' && c.body.includes(MARKER));
+            if (existing) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: existing.id,
+                body,
+              });
+              core.info(`Updated comment ${existing.id}`);
+            } else {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: prNumber,
+                body,
+              });
+              core.info('Created new report comment');
+            }

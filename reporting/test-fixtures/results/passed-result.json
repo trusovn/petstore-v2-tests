@@ -1,0 +1,16 @@
+{
+  "uuid": "11111111-1111-1111-1111-111111111111",
+  "historyId": "abc",
+  "testCaseId": "[engine:junit-jupiter]/[class:org.mtrusov.ExampleTests]/[method:ok()]",
+  "fullName": "org.mtrusov.ExampleTests.ok",
+  "name": "ok()",
+  "status": "passed",
+  "stage": "finished",
+  "labels": [],
+  "links": [],
+  "attachments": [],
+  "parameters": [],
+  "steps": [],
+  "start": 1783097866000,
+  "stop": 1783097866001
+}

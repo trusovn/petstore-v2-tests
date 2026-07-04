@@ -1,0 +1,14 @@
+{
+  "name": "petstore-ci-reporting",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "CI test reporting helpers and Allure 3 site/offline generation for petstore-v2-tests.",
+  "scripts": {
+    "test": "node --test report-site.test.mjs report-prepare.test.mjs",
+    "allure:generate": "node report-generate.mjs"
+  },
+  "dependencies": {
+    "allure": "3.14.1"
+  }
+}
