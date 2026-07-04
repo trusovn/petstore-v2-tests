@@ -1,0 +1,1 @@
+{"id":"605a379b6238432f81a15d6653c04391","fullName":"org.mtrusov.tests.StoreInventoryContractTests.getInventoryNoAuthFails","name":"getInventoryNoAuthFails(AuthProvider) [1] No api_key header is set","status":"failed","testResultsByEnv":{"default":"5ddf4d78e4df93b9ed554860beeadbb7"}}

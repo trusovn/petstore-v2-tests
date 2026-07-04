@@ -1,0 +1,55 @@
+{
+  "schemaVersion": 1,
+  "slug": "main",
+  "displayName": "main",
+  "lifecycle": {
+    "state": "open",
+    "closedAt": null,
+    "expiresAt": null
+  },
+  "source": {
+    "runId": 28714710898,
+    "runNumber": 7,
+    "runAttempt": 1,
+    "headSha": "e2b419c1d4216e90bf3973c7a0fd2ccc26a89bee",
+    "event": "push",
+    "conclusion": "success",
+    "url": "https://github.com/trusovn/petstore-v2-tests/actions/runs/28714710898",
+    "completedAt": "2026-07-04T17:54:30Z",
+    "prNumber": null
+  },
+  "suites": {
+    "unit": {
+      "availability": "generated",
+      "status": "passed",
+      "stats": {
+        "total": 11,
+        "passed": 11,
+        "failed": 0,
+        "broken": 0,
+        "skipped": 0,
+        "unknown": 0
+      },
+      "reportPath": "reports/main/unit/"
+    },
+    "regular": {
+      "availability": "generated",
+      "status": "passed",
+      "stats": {
+        "total": 9,
+        "passed": 9,
+        "failed": 0,
+        "broken": 0,
+        "skipped": 0,
+        "unknown": 0
+      },
+      "reportPath": "reports/main/regular/"
+    },
+    "quarantine": {
+      "availability": "generated",
+      "status": null,
+      "stats": {},
+      "reportPath": "reports/main/quarantine/"
+    }
+  }
+}
