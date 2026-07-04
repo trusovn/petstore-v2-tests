@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>trusovn/petstore-v2-tests CI reports</title>
+<style>
+:root {
+    --fg: #1f2328; --muted: #656d76; --border: #d0d7de; --head: #f6f8fa;
+    --pass: #1a7f37; --fail: #cf222e; --flaky: #9a6700; --link: #0969da;
+  }
+  html { background: #fff; }
+  body {
+    max-width: 1100px; margin: 0 auto; padding: 24px 16px 64px;
+    font: 14px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+      Helvetica, Arial, sans-serif;
+    color: var(--fg); background: #fff;
+  }
+  h1 { font-size: 1.25rem; margin: 0 0 4px; }
+  h1 + p { margin: 0 0 4px; font-size: 0.875rem; color: var(--muted); }
+  a { color: var(--link); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  section { margin-top: 28px; }
+  section > h2 {
+    font-size: 1rem; margin: 0 0 12px; padding-bottom: 6px;
+    border-bottom: 1px solid var(--border);
+  }
+  table { width: 100%; border-collapse: collapse; }
+  th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--border); vertical-align: top; }
+  th { background: var(--head); font-weight: 600; white-space: nowrap; }
+  tbody tr:hover { background: var(--head); }
+  td.ref { font-weight: 600; white-space: nowrap; }
+  td.updated { color: var(--muted); font-variant-numeric: tabular-nums; white-space: nowrap; }
+  ul { padding-left: 20px; }
+  li { margin: 6px 0; }
+  .gate, .suite { font-weight: 600; white-space: nowrap; }
+  .gate-passed, .suite-passed { color: var(--pass); }
+  .gate-failed, .suite-failed { color: var(--fail); }
+  .gate-other { color: var(--muted); }
+  .suite-flaky { color: var(--flaky); }
+  .suite-empty, .suite-not-run, .suite-missing, .suite-neutral { color: var(--muted); font-weight: 400; }
+  .freshness { margin: 0 0 4px; font-size: 0.875rem; color: var(--muted); }
+  .freshness-alert {
+    margin: 12px 0 0; padding: 8px 10px; border: 1px solid var(--border);
+    background: var(--head); font-size: 0.875rem;
+  }
+  @media (max-width: 720px) {
+    td.updated { display: none; }
+    th, td { padding: 6px 8px; }
+  }
+</style>
+</head>
+<body>
+<h1>trusovn/petstore-v2-tests CI reports</h1>
+<p><a href="https://github.com/trusovn/petstore-v2-tests/actions">Actions</a></p>
+<p id="freshness" class="freshness" data-generated-at="2026-07-24T09:25:34.321Z">Dashboard last updated 2026-07-24T09:25:34.321Z</p>
+<div id="freshness-alert" class="freshness-alert" hidden></div>
+<section><h2>main</h2>
+<table>
+<thead><tr><th>Ref</th><th>Gate</th><th>Updated</th><th>Unit</th><th>Regular</th><th>Quarantine</th><th>Run</th></tr></thead>
+<tbody>
+<tr><td class="ref">main</td><td class="gate gate-passed">passed</td><td class="updated">2026-07-04T17:54:30Z</td><td class="suite suite-passed"><a href="https://trusovn.github.io/petstore-v2-tests/reports/main/unit/">11 passed</a></td><td class="suite suite-passed"><a href="https://trusovn.github.io/petstore-v2-tests/reports/main/regular/">9 passed</a></td><td class="suite suite-neutral"><a href="https://trusovn.github.io/petstore-v2-tests/reports/main/quarantine/">non-gating; stats excluded</a></td><td><a href="https://github.com/trusovn/petstore-v2-tests/actions/runs/28714710898">run</a></td></tr></tbody></table></section>
+<section><h2>Open pull requests</h2>
+<table>
+<thead><tr><th>Ref</th><th>Gate</th><th>Updated</th><th>Unit</th><th>Regular</th><th>Quarantine</th><th>Run</th></tr></thead>
+<tbody>
+<tr><td class="ref">PR #13</td><td class="gate gate-failed">failed</td><td class="updated">2026-07-24T09:25:09Z</td><td class="suite suite-passed"><a href="https://trusovn.github.io/petstore-v2-tests/reports/pr-13/unit/">10 passed</a></td><td class="suite suite-failed"><a href="https://trusovn.github.io/petstore-v2-tests/reports/pr-13/regular/">3 broken</a></td><td class="suite suite-neutral"><a href="https://trusovn.github.io/petstore-v2-tests/reports/pr-13/quarantine/">non-gating; stats excluded</a></td><td><a href="https://github.com/trusovn/petstore-v2-tests/actions/runs/30082445937">run</a></td></tr>
+<tr><td class="ref">PR #12</td><td class="gate gate-failed">failed</td><td class="updated">2026-07-17T09:25:38Z</td><td class="suite suite-passed"><a href="https://trusovn.github.io/petstore-v2-tests/reports/pr-12/unit/">10 passed</a></td><td class="suite suite-failed"><a href="https://trusovn.github.io/petstore-v2-tests/reports/pr-12/regular/">3 broken</a></td><td class="suite suite-neutral"><a href="https://trusovn.github.io/petstore-v2-tests/reports/pr-12/quarantine/">non-gating; stats excluded</a></td><td><a href="https://github.com/trusovn/petstore-v2-tests/actions/runs/29569862726">run</a></td></tr>
+<tr><td class="ref">PR #11</td><td class="gate gate-failed">failed</td><td class="updated">2026-07-17T09:25:14Z</td><td class="suite suite-passed"><a href="https://trusovn.github.io/petstore-v2-tests/reports/pr-11/unit/">10 passed</a></td><td class="suite suite-failed"><a href="https://trusovn.github.io/petstore-v2-tests/reports/pr-11/regular/">4 broken</a></td><td class="suite suite-neutral"><a href="https://trusovn.github.io/petstore-v2-tests/reports/pr-11/quarantine/">non-gating; stats excluded</a></td><td><a href="https://github.com/trusovn/petstore-v2-tests/actions/runs/29569837287">run</a></td></tr>
+<tr><td class="ref">PR #7</td><td class="gate gate-passed">passed</td><td class="updated">2026-07-07T14:45:22Z</td><td class="suite suite-passed"><a href="https://trusovn.github.io/petstore-v2-tests/reports/pr-7/unit/">10 passed</a></td><td class="suite suite-passed"><a href="https://trusovn.github.io/petstore-v2-tests/reports/pr-7/regular/">10 passed</a></td><td class="suite suite-neutral"><a href="https://trusovn.github.io/petstore-v2-tests/reports/pr-7/quarantine/">non-gating; stats excluded</a></td><td><a href="https://github.com/trusovn/petstore-v2-tests/actions/runs/28875135138">run</a></td></tr></tbody></table></section>
+<section><h2>Recently closed</h2>
+<table>
+<thead><tr><th>Ref</th><th>Gate</th><th>Updated</th><th>Unit</th><th>Regular</th><th>Quarantine</th><th>Run</th></tr></thead>
+<tbody>
+<tr><td class="ref">PR #9</td><td class="gate gate-failed">failed</td><td class="updated">2026-07-10T09:25:31Z</td><td class="suite suite-passed"><a href="https://trusovn.github.io/petstore-v2-tests/reports/pr-9/unit/">10 passed</a></td><td class="suite suite-failed"><a href="https://trusovn.github.io/petstore-v2-tests/reports/pr-9/regular/">2 broken</a></td><td class="suite suite-neutral"><a href="https://trusovn.github.io/petstore-v2-tests/reports/pr-9/quarantine/">non-gating; stats excluded</a></td><td><a href="https://github.com/trusovn/petstore-v2-tests/actions/runs/29082954780">run</a></td></tr>
+<tr><td class="ref">PR #8</td><td class="gate gate-failed">failed</td><td class="updated">2026-07-10T09:25:09Z</td><td class="suite suite-passed"><a href="https://trusovn.github.io/petstore-v2-tests/reports/pr-8/unit/">10 passed</a></td><td class="suite suite-failed"><a href="https://trusovn.github.io/petstore-v2-tests/reports/pr-8/regular/">2 broken</a></td><td class="suite suite-neutral"><a href="https://trusovn.github.io/petstore-v2-tests/reports/pr-8/quarantine/">non-gating; stats excluded</a></td><td><a href="https://github.com/trusovn/petstore-v2-tests/actions/runs/29082935424">run</a></td></tr></tbody></table></section>
+<script>
+(function () {
+  var currentGeneratedAt = "2026-07-24T09:25:34.321Z";
+  if (!currentGeneratedAt || !window.fetch) return;
+  var alertEl = document.getElementById('freshness-alert');
+  if (!alertEl) return;
+  var manifestUrl = new URL('manifest.json', window.location.href);
+  manifestUrl.searchParams.set('fresh', Date.now().toString());
+  fetch(manifestUrl.toString(), { cache: 'no-store' })
+    .then(function (r) { return r.ok ? r.json() : null; })
+    .then(function (manifest) {
+      if (!manifest || !manifest.generatedAt) return;
+      if (new Date(manifest.generatedAt).getTime() <= new Date(currentGeneratedAt).getTime()) return;
+      var refreshUrl = new URL(window.location.href);
+      refreshUrl.searchParams.set('fresh', Date.now().toString());
+      alertEl.hidden = false;
+      alertEl.textContent = 'A newer dashboard is available. ';
+      var link = document.createElement('a');
+      link.href = refreshUrl.href;
+      link.textContent = 'Open latest';
+      alertEl.appendChild(link);
+      alertEl.appendChild(document.createTextNode('.'));
+    })
+    .catch(function () {});
+}());
+</script>
+</body>
+</html>

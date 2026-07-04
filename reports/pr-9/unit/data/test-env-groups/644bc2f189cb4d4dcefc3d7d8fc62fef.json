@@ -1,0 +1,1 @@
+{"id":"644bc2f189cb4d4dcefc3d7d8fc62fef","fullName":"org.mtrusov.config.ConfigLoaderTest.usesYamlBaseUriWhenLoadingAnExplicitResource","name":"usesYamlBaseUriWhenLoadingAnExplicitResource()","status":"passed","testResultsByEnv":{"default":"30442e895a7e64aa7a32a9d557ac1ce1"}}

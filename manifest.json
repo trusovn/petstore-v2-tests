@@ -1,0 +1,371 @@
+{
+  "schemaVersion": 1,
+  "generatedAt": "2026-07-24T09:25:34.321Z",
+  "baseUrl": "https://trusovn.github.io/petstore-v2-tests/",
+  "refs": [
+    {
+      "slug": "main",
+      "displayName": "main",
+      "lifecycle": {
+        "state": "open",
+        "closedAt": null,
+        "expiresAt": null
+      },
+      "source": {
+        "runId": 28714710898,
+        "runNumber": 7,
+        "runAttempt": 1,
+        "headSha": "e2b419c1d4216e90bf3973c7a0fd2ccc26a89bee",
+        "event": "push",
+        "conclusion": "success",
+        "url": "https://github.com/trusovn/petstore-v2-tests/actions/runs/28714710898",
+        "completedAt": "2026-07-04T17:54:30Z",
+        "prNumber": null
+      },
+      "suites": {
+        "unit": {
+          "availability": "generated",
+          "status": "passed",
+          "stats": {
+            "total": 11,
+            "passed": 11,
+            "failed": 0,
+            "broken": 0,
+            "skipped": 0,
+            "unknown": 0
+          },
+          "reportPath": "reports/main/unit/"
+        },
+        "regular": {
+          "availability": "generated",
+          "status": "passed",
+          "stats": {
+            "total": 9,
+            "passed": 9,
+            "failed": 0,
+            "broken": 0,
+            "skipped": 0,
+            "unknown": 0
+          },
+          "reportPath": "reports/main/regular/"
+        },
+        "quarantine": {
+          "availability": "generated",
+          "reportPath": "reports/main/quarantine/"
+        }
+      }
+    },
+    {
+      "slug": "pr-13",
+      "displayName": "PR #13",
+      "lifecycle": {
+        "state": "open",
+        "closedAt": null,
+        "expiresAt": null
+      },
+      "source": {
+        "runId": 30082445937,
+        "runNumber": 19,
+        "runAttempt": 1,
+        "headSha": "c09417fc13a89fe2de0cc8eb21dc1cdf92551a1f",
+        "event": "pull_request",
+        "conclusion": "failure",
+        "url": "https://github.com/trusovn/petstore-v2-tests/actions/runs/30082445937",
+        "completedAt": "2026-07-24T09:25:09Z",
+        "prNumber": 13
+      },
+      "suites": {
+        "unit": {
+          "availability": "generated",
+          "status": "passed",
+          "stats": {
+            "total": 10,
+            "passed": 10,
+            "failed": 0,
+            "broken": 0,
+            "skipped": 0,
+            "unknown": 0
+          },
+          "reportPath": "reports/pr-13/unit/"
+        },
+        "regular": {
+          "availability": "generated",
+          "status": "failed",
+          "stats": {
+            "total": 3,
+            "passed": 0,
+            "failed": 0,
+            "broken": 3,
+            "skipped": 0,
+            "unknown": 0
+          },
+          "reportPath": "reports/pr-13/regular/"
+        },
+        "quarantine": {
+          "availability": "generated",
+          "reportPath": "reports/pr-13/quarantine/"
+        }
+      }
+    },
+    {
+      "slug": "pr-12",
+      "displayName": "PR #12",
+      "lifecycle": {
+        "state": "open",
+        "closedAt": null,
+        "expiresAt": null
+      },
+      "source": {
+        "runId": 29569862726,
+        "runNumber": 18,
+        "runAttempt": 1,
+        "headSha": "0620cb7fdd13d53c5a4066b2b323c2cc09b89ae6",
+        "event": "pull_request",
+        "conclusion": "failure",
+        "url": "https://github.com/trusovn/petstore-v2-tests/actions/runs/29569862726",
+        "completedAt": "2026-07-17T09:25:38Z",
+        "prNumber": 12
+      },
+      "suites": {
+        "unit": {
+          "availability": "generated",
+          "status": "passed",
+          "stats": {
+            "total": 10,
+            "passed": 10,
+            "failed": 0,
+            "broken": 0,
+            "skipped": 0,
+            "unknown": 0
+          },
+          "reportPath": "reports/pr-12/unit/"
+        },
+        "regular": {
+          "availability": "generated",
+          "status": "failed",
+          "stats": {
+            "total": 3,
+            "passed": 0,
+            "failed": 0,
+            "broken": 3,
+            "skipped": 0,
+            "unknown": 0
+          },
+          "reportPath": "reports/pr-12/regular/"
+        },
+        "quarantine": {
+          "availability": "generated",
+          "reportPath": "reports/pr-12/quarantine/"
+        }
+      }
+    },
+    {
+      "slug": "pr-11",
+      "displayName": "PR #11",
+      "lifecycle": {
+        "state": "open",
+        "closedAt": null,
+        "expiresAt": null
+      },
+      "source": {
+        "runId": 29569837287,
+        "runNumber": 17,
+        "runAttempt": 1,
+        "headSha": "cc214916015a7229046f11091122b8211284049e",
+        "event": "pull_request",
+        "conclusion": "failure",
+        "url": "https://github.com/trusovn/petstore-v2-tests/actions/runs/29569837287",
+        "completedAt": "2026-07-17T09:25:14Z",
+        "prNumber": 11
+      },
+      "suites": {
+        "unit": {
+          "availability": "generated",
+          "status": "passed",
+          "stats": {
+            "total": 10,
+            "passed": 10,
+            "failed": 0,
+            "broken": 0,
+            "skipped": 0,
+            "unknown": 0
+          },
+          "reportPath": "reports/pr-11/unit/"
+        },
+        "regular": {
+          "availability": "generated",
+          "status": "failed",
+          "stats": {
+            "total": 4,
+            "passed": 0,
+            "failed": 0,
+            "broken": 4,
+            "skipped": 0,
+            "unknown": 0
+          },
+          "reportPath": "reports/pr-11/regular/"
+        },
+        "quarantine": {
+          "availability": "generated",
+          "reportPath": "reports/pr-11/quarantine/"
+        }
+      }
+    },
+    {
+      "slug": "pr-7",
+      "displayName": "PR #7",
+      "lifecycle": {
+        "state": "open",
+        "closedAt": null,
+        "expiresAt": null
+      },
+      "source": {
+        "runId": 28875135138,
+        "runNumber": 13,
+        "runAttempt": 1,
+        "headSha": "6a3e49a2e229396b46007944f70c81df6e1d6237",
+        "event": "pull_request",
+        "conclusion": "success",
+        "url": "https://github.com/trusovn/petstore-v2-tests/actions/runs/28875135138",
+        "completedAt": "2026-07-07T14:45:22Z",
+        "prNumber": 7
+      },
+      "suites": {
+        "unit": {
+          "availability": "generated",
+          "status": "passed",
+          "stats": {
+            "total": 10,
+            "passed": 10,
+            "failed": 0,
+            "broken": 0,
+            "skipped": 0,
+            "unknown": 0
+          },
+          "reportPath": "reports/pr-7/unit/"
+        },
+        "regular": {
+          "availability": "generated",
+          "status": "passed",
+          "stats": {
+            "total": 10,
+            "passed": 10,
+            "failed": 0,
+            "broken": 0,
+            "skipped": 0,
+            "unknown": 0
+          },
+          "reportPath": "reports/pr-7/regular/"
+        },
+        "quarantine": {
+          "availability": "generated",
+          "reportPath": "reports/pr-7/quarantine/"
+        }
+      }
+    },
+    {
+      "slug": "pr-9",
+      "displayName": "PR #9",
+      "lifecycle": {
+        "state": "closed",
+        "closedAt": "2026-07-17T09:24:38Z",
+        "expiresAt": "2026-07-24T09:24:38.000Z"
+      },
+      "source": {
+        "runId": 29082954780,
+        "runNumber": 15,
+        "runAttempt": 1,
+        "headSha": "397add03eac77ca8b8e05787aece573b8926dbcc",
+        "event": "pull_request",
+        "conclusion": "failure",
+        "url": "https://github.com/trusovn/petstore-v2-tests/actions/runs/29082954780",
+        "completedAt": "2026-07-10T09:25:31Z",
+        "prNumber": 9
+      },
+      "suites": {
+        "unit": {
+          "availability": "generated",
+          "status": "passed",
+          "stats": {
+            "total": 10,
+            "passed": 10,
+            "failed": 0,
+            "broken": 0,
+            "skipped": 0,
+            "unknown": 0
+          },
+          "reportPath": "reports/pr-9/unit/"
+        },
+        "regular": {
+          "availability": "generated",
+          "status": "failed",
+          "stats": {
+            "total": 2,
+            "passed": 0,
+            "failed": 0,
+            "broken": 2,
+            "skipped": 0,
+            "unknown": 0
+          },
+          "reportPath": "reports/pr-9/regular/"
+        },
+        "quarantine": {
+          "availability": "generated",
+          "reportPath": "reports/pr-9/quarantine/"
+        }
+      }
+    },
+    {
+      "slug": "pr-8",
+      "displayName": "PR #8",
+      "lifecycle": {
+        "state": "closed",
+        "closedAt": "2026-07-17T09:24:13Z",
+        "expiresAt": "2026-07-24T09:24:13.000Z"
+      },
+      "source": {
+        "runId": 29082935424,
+        "runNumber": 14,
+        "runAttempt": 1,
+        "headSha": "49724b8baadd8e74b5dde228d794de893cd28d70",
+        "event": "pull_request",
+        "conclusion": "failure",
+        "url": "https://github.com/trusovn/petstore-v2-tests/actions/runs/29082935424",
+        "completedAt": "2026-07-10T09:25:09Z",
+        "prNumber": 8
+      },
+      "suites": {
+        "unit": {
+          "availability": "generated",
+          "status": "passed",
+          "stats": {
+            "total": 10,
+            "passed": 10,
+            "failed": 0,
+            "broken": 0,
+            "skipped": 0,
+            "unknown": 0
+          },
+          "reportPath": "reports/pr-8/unit/"
+        },
+        "regular": {
+          "availability": "generated",
+          "status": "failed",
+          "stats": {
+            "total": 2,
+            "passed": 0,
+            "failed": 0,
+            "broken": 2,
+            "skipped": 0,
+            "unknown": 0
+          },
+          "reportPath": "reports/pr-8/regular/"
+        },
+        "quarantine": {
+          "availability": "generated",
+          "reportPath": "reports/pr-8/quarantine/"
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,1 @@
+{"id":"093b79dc243ba8e65b46b0dacd840405","fullName":"org.mtrusov.config.ConfigLoaderTest.resolveEnvPlaceholdersReturnsLiteralValueWhenNoPlaceholderPresent","name":"resolveEnvPlaceholdersReturnsLiteralValueWhenNoPlaceholderPresent()","status":"passed","testResultsByEnv":{"default":"844fd6147df9ad97270f989ed5206661"}}

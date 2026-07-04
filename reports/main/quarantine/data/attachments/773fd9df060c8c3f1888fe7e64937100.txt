@@ -1,0 +1,28 @@
+Request method:	GET
+Request URI:	http://localhost:8080/v2/store/inventory
+Proxy:			<none>
+Request params:	<none>
+Query params:	<none>
+Form params:	<none>
+Path params:	<none>
+Headers:		Accept=application/json, application/javascript, text/javascript, text/json
+				api_key=...
+				Content-Type=application/json
+Cookies:		<none>
+Multiparts:		<none>
+Body:			<none>
+
+HTTP/1.1 200 OK
+Date: Sat, 04 Jul 2026 17:54:14 GMT
+Access-Control-Allow-Origin: *
+Access-Control-Allow-Methods: GET, POST, DELETE, PUT
+Access-Control-Allow-Headers: Content-Type, api_key, Authorization
+Content-Type: application/json
+Transfer-Encoding: chunked
+Server: Jetty(9.2.9.v20150224)
+
+{
+    "sold": 2,
+    "pending": 2,
+    "available": 8
+}

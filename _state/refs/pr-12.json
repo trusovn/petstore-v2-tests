@@ -1,0 +1,55 @@
+{
+  "schemaVersion": 1,
+  "slug": "pr-12",
+  "displayName": "PR #12",
+  "lifecycle": {
+    "state": "open",
+    "closedAt": null,
+    "expiresAt": null
+  },
+  "source": {
+    "runId": 29569862726,
+    "runNumber": 18,
+    "runAttempt": 1,
+    "headSha": "0620cb7fdd13d53c5a4066b2b323c2cc09b89ae6",
+    "event": "pull_request",
+    "conclusion": "failure",
+    "url": "https://github.com/trusovn/petstore-v2-tests/actions/runs/29569862726",
+    "completedAt": "2026-07-17T09:25:38Z",
+    "prNumber": 12
+  },
+  "suites": {
+    "unit": {
+      "availability": "generated",
+      "status": "passed",
+      "stats": {
+        "total": 10,
+        "passed": 10,
+        "failed": 0,
+        "broken": 0,
+        "skipped": 0,
+        "unknown": 0
+      },
+      "reportPath": "reports/pr-12/unit/"
+    },
+    "regular": {
+      "availability": "generated",
+      "status": "failed",
+      "stats": {
+        "total": 3,
+        "passed": 0,
+        "failed": 0,
+        "broken": 3,
+        "skipped": 0,
+        "unknown": 0
+      },
+      "reportPath": "reports/pr-12/regular/"
+    },
+    "quarantine": {
+      "availability": "generated",
+      "status": null,
+      "stats": {},
+      "reportPath": "reports/pr-12/quarantine/"
+    }
+  }
+}

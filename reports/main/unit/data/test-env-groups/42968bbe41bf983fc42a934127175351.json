@@ -1,0 +1,1 @@
+{"id":"42968bbe41bf983fc42a934127175351","fullName":"org.mtrusov.utils.ApiKeyObfuscatingPrintStreamTests.fullyObfuscatesApiKeysShorterThanTheVisiblePrefix","name":"fullyObfuscatesApiKeysShorterThanTheVisiblePrefix()","status":"passed","testResultsByEnv":{"default":"41f087d58442a2e7b0b55e3d38b6ef7f"}}

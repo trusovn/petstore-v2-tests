@@ -1,0 +1,1 @@
+{"id":"82f2733f18490880ac56994f44a83f1e","fullName":"org.mtrusov.tests.StoreOrdersContractTests$DeleteOrder.deleteOrderInvalidIds","name":"deleteOrderInvalidIds(String, int) [1] Non-existing Order ID","status":"passed","testResultsByEnv":{"default":"e362e1fc4485a47e78978dee0eeeab55"}}

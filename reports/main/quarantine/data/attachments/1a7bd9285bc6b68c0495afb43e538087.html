@@ -1,0 +1,35 @@
+
+<div>POST to http://localhost:8080/v2/store/order</div>
+
+    <h4>Body</h4>
+    <div>
+    <pre class="preformated-text">
+{
+    &quot;id&quot;: 9000,
+    &quot;petId&quot;: 2001,
+    &quot;quantity&quot;: 3,
+    &quot;shipDate&quot;: &quot;2026-07-04T17:54:14.347Z&quot;,
+    &quot;status&quot;: &quot;placed&quot;,
+    &quot;complete&quot;: false
+}    </pre>
+    </div>
+
+    <h4>Headers</h4>
+    <div>
+                <div>Accept: application/json, application/javascript, text/javascript, text/json</div>
+                <div>Content-Type: application/json</div>
+    </div>
+
+
+    <h4>Curl</h4>
+    <div>
+        curl -v -X POST &#39;http://localhost:8080/v2/store/order&#39; -H &#39;Accept: application/json, application/javascript, text/javascript, text/json&#39; -H &#39;Content-Type: application/json&#39; -d &#39;{
+    &quot;id&quot;: 9000,
+    &quot;petId&quot;: 2001,
+    &quot;quantity&quot;: 3,
+    &quot;shipDate&quot;: &quot;2026-07-04T17:54:14.347Z&quot;,
+    &quot;status&quot;: &quot;placed&quot;,
+    &quot;complete&quot;: false
+}&#39;
+    </div>
+
