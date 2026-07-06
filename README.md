@@ -4,6 +4,10 @@ This repository can run a pinned Swagger Petstore v2 container locally. Startup
 recreates the in-memory server, waits for readiness, and seeds deterministic
 fixtures through the public HTTP API.
 
+The suite deliberately distinguishes the published API definition, the behavior
+of the pinned sample implementation, and stricter production-oriented
+expectations. See [Store contract policy and known deviations](docs/contract-policy.md).
+
 ## Prerequisites
 
 - Docker with Docker Compose
