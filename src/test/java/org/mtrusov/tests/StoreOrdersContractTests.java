@@ -1,29 +1,27 @@
 package org.mtrusov.tests;
 
-import io.restassured.RestAssured;
 import io.restassured.response.Response;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.parallel.ResourceLock;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
-import org.mtrusov.api.OrdersApiClient;
-import org.mtrusov.config.ConfigLoader;
-import org.mtrusov.config.NoAuthProvider;
 import org.mtrusov.factories.Orders;
 import org.mtrusov.models.Order;
 import org.mtrusov.utils.SchemaValidator;
 
 import java.util.stream.Stream;
 
+import static java.net.HttpURLConnection.*;
 import static org.hamcrest.Matchers.equalTo;
 import static org.junit.jupiter.params.provider.Arguments.argumentSet;
 import static org.mtrusov.utils.AssertUtils.*;
 import static org.mtrusov.utils.DateTimeAsserts.assertDateTimeIsValid;
 import static org.mtrusov.utils.OrderAsserts.assertResponseOrderMatches;
 
-public class StoreOrdersContractTests extends TestsBase {
+@ResourceLock("petstore-orders")
+public class StoreOrdersContractTests extends OrdersTestsBase {
     private static final int PLACED_ORDER_ID = 1001;
     private static final int MISSING_ORDER_ID = 1010101010;
 
@@ -33,8 +31,8 @@ public class StoreOrdersContractTests extends TestsBase {
         @Quarantine
         public void validBody() {
             Order order = Orders.defaultOrder();
-            Response response = ordersApiClient.placeOrder(order);
-            assertResponseCode(response, 200);
+            Response response = ordersTestData.createOrderSuccess(order);
+            assertResponseCode(response, HTTP_OK);
             SchemaValidator.validateJsonSchema("schemas/OrderResponseSchema.json", response);
             assertOrderShipDateIsValid(response);
             assertResponseOrderMatches(response, order);
@@ -65,7 +63,7 @@ public class StoreOrdersContractTests extends TestsBase {
             return Stream.of(
                     argumentSet(
                             "Malformed request body",
-                            "{\"malformed\":}", 400
+                            "{\"malformed\":}", HTTP_BAD_REQUEST
                     )
             );
         }
@@ -74,35 +72,35 @@ public class StoreOrdersContractTests extends TestsBase {
             return Stream.of(
                     argumentSet(
                             "Missing request body",
-                            null, 400
+                            null, HTTP_BAD_REQUEST
                     ),
                     argumentSet(
                             "Empty request body",
-                            "{}", 400
+                            "{}", HTTP_BAD_REQUEST
                     ),
                     argumentSet(
                             "Invalid order ID",
-                            Orders.defaultOrderWithModifiedField("id", "asdf"), 400
+                            Orders.defaultOrderWithModifiedField("id", "asdf"), HTTP_BAD_REQUEST
                     ),
                     argumentSet(
                             "Invalid order petId",
-                            Orders.defaultOrderWithModifiedField("petId", "asdf"), 400
+                            Orders.defaultOrderWithModifiedField("petId", "asdf"), HTTP_BAD_REQUEST
                     ),
                     argumentSet(
                             "Invalid order quantity",
-                            Orders.defaultOrderWithModifiedField("quantity", "asdf"), 400
+                            Orders.defaultOrderWithModifiedField("quantity", "asdf"), HTTP_BAD_REQUEST
                     ),
                     argumentSet(
                             "Invalid order shipDate",
-                            Orders.defaultOrderWithModifiedField("shipDate", "asdf"), 400
+                            Orders.defaultOrderWithModifiedField("shipDate", "asdf"), HTTP_BAD_REQUEST
                     ),
                     argumentSet(
                             "Invalid order status",
-                            Orders.defaultOrderWithModifiedField("status", "asdf"), 400
+                            Orders.defaultOrderWithModifiedField("status", "asdf"), HTTP_BAD_REQUEST
                     ),
                     argumentSet(
                             "Invalid order complete",
-                            Orders.defaultOrderWithModifiedField("complete", "asdf"), 400
+                            Orders.defaultOrderWithModifiedField("complete", "asdf"), HTTP_BAD_REQUEST
                     )
             );
         }
@@ -113,14 +111,14 @@ public class StoreOrdersContractTests extends TestsBase {
         @Test
         public void deleteOrderValidId() {
             Order order = Orders.defaultOrder();
-            Response createdOrderResponse = ordersApiClient.placeOrder(order);
-            assertResponseCode(createdOrderResponse, 200);
+            Response createResponse = ordersTestData.createOrderSuccess(order);
+            assertResponseCode(createResponse, HTTP_OK);
 
-            Response response = ordersApiClient.delete(order.id());
-            assertResponseCode(response, 200);
-            assertInfoMessageFieldCode(response, 200);
-            SchemaValidator.validateJsonSchema("schemas/DeleteOrderResponseSchema.json", response);
-            assertInfoMessageFieldMessageContains(response, order.id().toString());
+            Response deleteResponse = ordersTestData.deleteOrderSuccess(order.id());
+            assertResponseCode(deleteResponse, HTTP_OK);
+            assertInfoMessageFieldCode(deleteResponse, HTTP_OK);
+            SchemaValidator.validateJsonSchema("schemas/DeleteOrderResponseSchema.json", deleteResponse);
+            assertInfoMessageFieldMessageContains(deleteResponse, order.id().toString());
         }
 
         @ParameterizedTest
@@ -147,7 +145,7 @@ public class StoreOrdersContractTests extends TestsBase {
         private static Stream<Arguments> regularDeleteOrderIds() {
             return Stream.of(
                     argumentSet(
-                            "Non-existing Order ID", String.valueOf(MISSING_ORDER_ID), 404
+                            "Non-existing Order ID", String.valueOf(MISSING_ORDER_ID), HTTP_NOT_FOUND
                     )
             );
         }
@@ -155,13 +153,13 @@ public class StoreOrdersContractTests extends TestsBase {
         private static Stream<Arguments> quarantinedDeleteOrderIds() {
             return Stream.of(
                     argumentSet(
-                            "Negative Order ID", "-1", 400
+                            "Negative Order ID", "-1", HTTP_BAD_REQUEST
                     ),
                     argumentSet(
-                            "Zero Order ID", "0", 400
+                            "Zero Order ID", "0", HTTP_BAD_REQUEST
                     ),
                     argumentSet(
-                            "Invalid String Order ID", "INVALID", 400
+                            "Invalid String Order ID", "INVALID", HTTP_BAD_REQUEST
                     )
             );
         }
@@ -173,7 +171,7 @@ public class StoreOrdersContractTests extends TestsBase {
         @Quarantine
         public void getOrderValidId() {
             Response response = ordersApiClient.get(PLACED_ORDER_ID);
-            assertResponseCode(response, 200);
+            assertResponseCode(response, HTTP_OK);
             SchemaValidator.validateJsonSchema("schemas/OrderResponseSchema.json", response);
             assertOrderShipDateIsValid(response);
             response.then()
@@ -199,16 +197,16 @@ public class StoreOrdersContractTests extends TestsBase {
     public static Stream<Arguments> invalidOrderIds() {
         return Stream.of(
                 argumentSet(
-                        "Non-existing Order ID", String.valueOf(MISSING_ORDER_ID), 404
+                        "Non-existing Order ID", String.valueOf(MISSING_ORDER_ID), HTTP_NOT_FOUND
                 ),
                 argumentSet(
-                        "Negative Order ID", "-1", 400
+                        "Negative Order ID", "-1", HTTP_BAD_REQUEST
                 ),
                 argumentSet(
-                        "Zero Order ID", "0", 400
+                        "Zero Order ID", "0", HTTP_BAD_REQUEST
                 ),
                 argumentSet(
-                        "Invalid String Order ID", "INVALID", 400
+                        "Invalid String Order ID", "INVALID", HTTP_BAD_REQUEST
                 )
         );
     }
