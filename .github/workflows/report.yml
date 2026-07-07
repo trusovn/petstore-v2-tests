@@ -1,6 +1,6 @@
 # Non-gating CI test reporting and GitHub Pages publishing.
 #
-# Triggered by completed `Tests` runs (workflow_run), pull_request
+# Triggered by completed `Tests` runs (workflow_run), pull_request_target
 # close/reopen, and a daily cleanup schedule. It is intentionally separate from
 # the `Tests` workflow and never gates a merge. `Tests / test` remains the only
 # required gate.
@@ -18,7 +18,7 @@ on:
   workflow_run:
     workflows: [Tests]
     types: [completed]
-  pull_request:
+  pull_request_target:
     types: [closed, reopened]
   schedule:
     - cron: "23 3 * * *"
@@ -101,7 +101,7 @@ jobs:
                 echo "Found $NUM PR(s) for sha; will resolve in node."
               fi
             fi
-          elif [ "$EVENT_NAME" = "pull_request" ]; then
+          elif [ "$EVENT_NAME" = "pull_request" ] || [ "$EVENT_NAME" = "pull_request_target" ]; then
             {
               echo "reportEvent=pull_request"
               echo "prAction=$PR_ACTION"
