@@ -1,238 +1,266 @@
 # Local Swagger Petstore contract tests
 
-This repository can run a pinned Swagger Petstore v2 container locally. Startup
-recreates the in-memory server, waits for readiness, and seeds deterministic
-fixtures through the public HTTP API.
+This repository contains Java 25 contract tests for the Store API in Swagger
+Petstore v2. It runs against a pinned local `swaggerapi/petstore:1.0.7`
+container, seeds deterministic fixtures through the public HTTP API, and splits
+build-gating checks from known implementation deviations.
 
-The suite deliberately distinguishes the published API definition, the behavior
+The suite deliberately separates the published Swagger definition, the behavior
 of the pinned sample implementation, and stricter production-oriented
 expectations. See [Store contract policy and known deviations](docs/contract-policy.md).
 
-## Prerequisites
+The official Store order endpoints also advertise XML responses. This suite
+mostly focuses on the JSON contract, with one narrow XML demo test for
+`GET /store/order/{orderId}`. Broader XML coverage is intentionally out of
+scope. `GET /store/inventory` is JSON-only in the published definition, and
+order creation consumes JSON.
+
+## Quick start
+
+Prerequisites:
 
 - Docker with Docker Compose
 - Make
 - Java 25 or newer
 - Maven
 - `curl`
+- `jq`
 
-## Start and reset
+Create a local `.env` file for the API key used by the contract tests:
+
+```bash
+cp .env.example .env
+# then set PETSTORE_API_KEY to the api_key accepted by your Petstore instance
+```
+
+For the pinned local container, the Swagger Petstore default api_key is
+sufficient.
+
+Start the local Petstore container, wait for readiness, and seed fixtures:
 
 ```bash
 make start
 ```
 
-Reset the server to its image baseline and reapply the fixtures:
+Run the build-gating SUT contract tests:
 
 ```bash
-make reset
+make verify-regular
 ```
 
-Both commands leave the server running at `http://localhost:8080/v2`. The reset
-command recreates the container, which clears its in-memory state. Stop and
-remove it explicitly:
-
-```bash
-make stop
-```
-
-Run local unit tests without a Petstore instance:
+Run the local unit/infrastructure tests, which do not require a Petstore
+instance:
 
 ```bash
 make test
 ```
 
-Tests under `src/test/java/org/mtrusov/tests` target the SUT. Run only those
-tests with:
+Stop the local container when finished:
 
 ```bash
-make verify
+make stop
 ```
 
-## Test report
+## Common commands
 
-Each test run writes Allure results to `target/allure-results`. HTTP requests
-and responses are included as report attachments.
+| Command | Purpose |
+|---|---|
+| `make start` | Start the pinned local Petstore container and seed fixtures. |
+| `make reset` | Recreate the container, clearing in-memory state, then seed fixtures. |
+| `make seed` | Reapply committed fixtures to an already running local container. |
+| `make stop` | Stop and remove the local Compose service. |
+| `make status` | Show Compose service status. |
+| `make logs` | Follow local Petstore container logs. |
+| `make test` | Run non-SUT unit/infrastructure tests via Surefire. |
+| `make test-scripts` | Run shell tests for the Petstore context scripts. |
+| `make verify-regular` | Run build-gating SUT contract tests only. |
+| `make verify-quarantine` | Run quarantined SUT probes without failing the build. |
+| `make verify` | Run regular and quarantined SUT tests. Only regular failures gate. |
+| `make report` | Generate the regular-suite Allure report from latest results. |
+| `make report-unit` | Generate the unit-suite Allure report from latest results. |
+| `make report-quarantine` | Generate the quarantine-suite Allure report from latest results. |
 
-Generate a fresh HTML report for the full suite:
+The local Petstore base URI is `http://localhost:8080/v2` by default.
 
-```bash
-mvn clean verify
-make report
-```
+## Project layout
 
-The single-file report entry point is
-`target/site/allure-maven-plugin/index.html`. Report generation downloads its
-runtime on first use, then reuses the local cache.
-
-## CI test reporting
-
-CI publishes browsable Allure reports to GitHub Pages, separate from the
-merge-gating `Tests` workflow. The reporting workflow (`Reports`) never gates a
-merge; `Tests / test` remains the only required check.
-
-- Public dashboard: <https://trusovn.github.io/petstore-v2-tests/>
-- Separate reports per suite (`unit`, `regular`, `quarantine`) and per ref
-  (`main`, `pr-<number>`).
-- Allure history is kept per `(ref, suite)` and capped at 20 launches.
-- A PR gets one updatable comment with unit/regular counts, bounded failure
-  details, and links to all three suite reports. Quarantine is reported as
-  `non-gating; stats excluded` — it stays browsable but contributes no
-  dashboard, manifest, comment, or aggregate statistics.
-- Closing a PR keeps its latest reports and history for seven days; a daily
-  schedule removes expired PR state after that window.
-- Manually dispatched `Tests` runs (workflow_dispatch) produce a downloadable,
-  seven-day, offline-viewable HTML bundle instead of a Pages entry. Unzip it
-  and open the root `index.html` in a browser; each suite is a standalone
-  single-file report.
-
-### Local single-file vs CI multi-file reports
-
-Locally, `make report` (the `allure-maven` plugin) generates a single-file
-report at `target/site/allure-maven-plugin/index.html`. CI instead generates
-multi-file Allure reports (one per suite) for GitHub Pages, with separate
-per-`(ref, suite)` JSONL history. The CI report generator is pinned to Allure
-Report 3.14.1 via `reporting/package-lock.json` (`npm ci --prefix reporting`),
-independent of the Maven-side Allure Java adapters. The local single-file
-output layout is unchanged.
-
-### Public data exposure
-
-> **Warning:** GitHub Pages for this repository is public. CI reports may
-> contain diagnostic request/response attachments, captured failure output,
-> and stack traces. Do not run CI against fixtures or secrets you do not want
-> public. The current failure logger retains the first four characters of the
-> API key in captured stdout; full masking plus a fail-closed pre-upload secret
-> scan is a planned follow-up.
+- `src/test/java/org/mtrusov/api`: Rest Assured API clients.
+- `src/test/java/org/mtrusov/tests`: JUnit SUT contract tests.
+- `src/test/java/org/mtrusov/factories`, `models`, `utils`: test data,
+  DTOs, and assertion helpers.
+- `src/test/resources/schemas`: JSON Schema assertions for response bodies.
+- `test-data/pets` and `test-data/orders`: deterministic seed fixtures.
+- `scripts`: local runtime, seeding, and script tests.
+- `compose.yaml`: pinned local Swagger Petstore container.
+- `docs/contract-policy.md`: contract expectations and known deviations.
 
 ## Test execution model
 
-`mvn test` runs only the non-SUT unit/infrastructure tests via Surefire.
-`mvn verify` additionally runs the SUT contract tests under
-`src/test/java/org/mtrusov/tests` via Failsafe, split into two executions:
+The Maven lifecycle is split by test purpose:
 
-- `regular-tests` — all tests except `@Quarantine`; gates the build (the
-  Failsafe `verify` goal fails on any failure).
-- `quarantine-tests` — only `@Quarantine`; runs but never gates the build
-  (`testFailureIgnore=true`). It uses a separate Failsafe summary file so the
-  regular `verify` goal cannot misattribute quarantine failures.
+- `mvn test` runs only non-SUT unit/infrastructure tests through Surefire.
+  Tests under `org/mtrusov/tests/**` are excluded.
+- `mvn verify` runs SUT contract tests through Failsafe, split into regular and
+  quarantine executions.
 
-Each execution writes its own `target/failsafe-reports/{regular,quarantine}`
-and `target/allure-results/{regular,quarantine}`.
+Failsafe executions:
+
+| Execution | Selection | Build impact | Output |
+|---|---|---|---|
+| `regular-tests` | `org/mtrusov/tests/**`, excluding `@Quarantine` | Gates the build. Any failure fails `verify`. | `target/failsafe-reports/regular`, `target/allure-results/regular` |
+| `quarantine-tests` | `org/mtrusov/tests/**`, only `@Quarantine` | Non-gating. Failures are ignored by Maven. | `target/failsafe-reports/quarantine`, `target/allure-results/quarantine` |
 
 `make verify`, `make verify-regular`, and `make verify-quarantine` are thin
-wrappers around `mvn verify` (with the corresponding suite-skip flags). They do
-not start or stop the SUT, and there is no local automatic diagnostic bundling:
-Failsafe does not collect Docker logs or upload artifacts. Bring the server up
-with `make start` first, and inspect a still-running container with `make logs`.
-In CI, the pipeline owns the Compose lifecycle and evidence retention
-(`target/failsafe-reports/**`, `target/allure-results/**`, Compose logs, and
-container state on failure), and always tears the environment down regardless of
-outcome.
+wrappers around `mvn verify` with the corresponding skip flags. They do not
+start, stop, or reset the SUT. Start the local runtime with `make start` first.
 
-The base URI is resolved by `ConfigLoader` with precedence JVM property
-(`-Dpetstore.baseUri`), then environment variable (`PETSTORE_BASE_URI`), then
-`src/test/resources/application.config.yaml` (default
-`http://localhost:8080/v2`). The `make verify*` targets honor a non-default
-`PETSTORE_PORT` by translating it to `-Dpetstore.baseUri`
-(`http://localhost:${PETSTORE_PORT}/v2`); an explicit `PETSTORE_BASE_URI` takes
-precedence and is read directly by `ConfigLoader`, so no `-D` is passed when it
-is set.
+JUnit runs test classes concurrently while methods within a class run on the
+same thread. Order-mutating test classes use resource locks to protect shared
+Petstore state.
 
-## Fixtures and test isolation
+## Reports
 
-Committed JSON fixtures are under `test-data/pets/` and `test-data/orders/`.
-They are seeded with these reserved IDs:
+Allure results are written per suite:
+
+- Unit tests: `target/allure-results/unit`
+- Regular SUT tests: `target/allure-results/regular`
+- Quarantined SUT tests: `target/allure-results/quarantine`
+
+Generate a local report after running the corresponding suite:
+
+```bash
+make report-regular
+make report-unit
+make report-quarantine
+```
+
+`make report` is an alias for `make report-regular`. Local reports are written
+under `target/site/allure-maven-plugin/<suite>/index.html`. The Allure Maven
+plugin downloads its runtime on first use and reuses the local cache afterward.
+
+## Configuration
+
+### Runtime target
+
+`PETSTORE_TARGET` selects how scripts resolve the Petstore runtime:
+
+| Value | Use case | Required settings |
+|---|---|---|
+| `local-compose` | Managed local Compose service. This is the default. | Optional `PETSTORE_PORT`; optional `PETSTORE_ACCESS_LOG_DIR`. |
+| `external` | User-supplied Petstore endpoint. | `PETSTORE_BASE_URI` is required. |
+
+Under `local-compose`, the start/seed scripts reject `PETSTORE_BASE_URI` to
+avoid guessing ownership from an address. Use `PETSTORE_PORT` for a local port
+change, or select `PETSTORE_TARGET=external`.
+
+### Test endpoint resolution
+
+`ConfigLoader` resolves the test base URI in this order:
+
+1. JVM property: `-Dpetstore.baseUri=...`
+2. Environment variable: `PETSTORE_BASE_URI`
+3. `src/test/resources/application.config.yaml`
+
+The `make verify*` targets pass `-Dpetstore.baseUri=http://localhost:${PETSTORE_PORT}/v2`
+when `PETSTORE_BASE_URI` is not set. If `PETSTORE_BASE_URI` is set, they do not
+pass a JVM property and let `ConfigLoader` read the environment directly.
+
+### Environment variables
+
+| Variable | Purpose |
+|---|---|
+| `PETSTORE_API_KEY` | Required by SUT contract tests. Sent as the `api_key` header where auth is used. |
+| `PETSTORE_PORT` | Host port for the local Compose service. Defaults to `8080`. |
+| `PETSTORE_BASE_URI` | Full endpoint for external runs, for example `https://petstore.swagger.io/v2`. |
+| `PETSTORE_TARGET` | Runtime target: `local-compose` or `external`. Defaults to `local-compose`. |
+| `PETSTORE_ACCESS_LOG_DIR` | Host directory mounted for local Jetty access logs. |
+
+`PETSTORE_API_KEY` is declared in `application.config.yaml` as
+`${PETSTORE_API_KEY}` and resolved from the real environment first, then a
+repo-root `.env` file. There is no JVM-property override for the API key.
+
+## Fixtures and isolation
+
+Committed fixtures live under `test-data/pets/` and `test-data/orders/`.
+Reserved IDs:
 
 - Read-only pets: `2001-2002`
 - Read-only orders: `1001-1002`
 - Mutation tests: `9000-9999`
 - Guaranteed-missing test ID: `1010101010`
 
-The seeder can be rerun independently and is idempotent for the pinned Petstore
-implementation:
+The seeder is idempotent for the pinned Petstore image:
 
 ```bash
 make seed
 ```
 
-## Logs
+The local Petstore stores data in memory. `make reset` recreates the container
+and reapplies the fixtures.
 
-Jetty access logs are written to `.runtime/petstore-logs/access/` by default (gitignored).
-Application output remains available through:
+## Running against an external Petstore
 
-```bash
-make logs
-```
-
-## Configuration
-
-- `PETSTORE_TARGET` selects the runtime target (default `local-compose`):
-  - `local-compose` — managed local Compose service. The base URI is derived
-    from `PETSTORE_PORT` (default `8080`) and the fixed base path `/v2` (the
-    Petstore v2 image serves `/v2`). `make start`, `make reset`, and `make seed`
-    require this target.
-  - `external` — a user-supplied endpoint. `PETSTORE_BASE_URI` is required.
-- `PETSTORE_PORT` changes the host port used by Compose (local-compose only).
-  The `make verify*` targets target this port (default `8080`) unless
-  `PETSTORE_BASE_URI` is set.
-- `PETSTORE_BASE_URI` sets the endpoint for the `external` target. It is
-  rejected by the local Compose start/seed path (`petstore-context.sh`) under
-  `local-compose` to avoid guessing ownership from an address; use
-  `PETSTORE_PORT` or select `PETSTORE_TARGET=external` there. The `make verify*`
-  targets do not use that resolver: they accept `PETSTORE_BASE_URI` directly via
-  `ConfigLoader`, and it takes precedence over `PETSTORE_PORT`.
-- `PETSTORE_ACCESS_LOG_DIR` changes the host directory mounted at `/var/log`
-  (local-compose only).
-- `PETSTORE_API_KEY` is the api_key sent in the `api_key` header by the
-  contract tests. It is required for `make verify`; the config loader fails
-  fast if it is unset or blank. The local pinned image accepts the Swagger
-  Petstore default api_key.
-
-The `make verify*` targets are thin `mvn verify` wrappers. They pass
-`-Dpetstore.baseUri` derived from `PETSTORE_PORT` unless `PETSTORE_BASE_URI` is
-set, in which case no `-D` is passed and `ConfigLoader` reads the env var
-directly. For direct IDE/Maven runs the same `ConfigLoader` precedence applies
-(JVM property, environment variable, then `application.config.yaml`). The
-api_key is declared in `src/test/resources/application.config.yaml` as the
-placeholder `${PETSTORE_API_KEY}` and resolved from the environment, with a
-repo-root `.env` file as a fallback (real environment takes precedence over
-`.env`). There is no JVM-property override for the api_key.
-
-### `.env` file
-
-Secrets such as `PETSTORE_API_KEY` can be placed in a repo-root `.env` file,
-which is gitignored. Copy the committed template and fill in the value:
-
-```bash
-cp .env.example .env
-# then edit .env and set PETSTORE_API_KEY=...
-```
-
-`.env` is optional: an exported `PETSTORE_API_KEY` environment variable is
-sufficient, and takes precedence over `.env`.
-
-Running tests against the shared public service is an explicit opt-in:
+External runs are explicit opt-in:
 
 ```bash
 PETSTORE_TARGET=external PETSTORE_BASE_URI=https://petstore.swagger.io/v2 make verify
 ```
 
-Warning: the suite creates and deletes data. Using the public URI mutates shared
-public state and is not suitable for normal development or automated runs.
+Warning: the suite creates and deletes data. Do not run mutation tests against a
+shared public service unless you intend to mutate shared public state.
 
-## Troubleshooting
+## Logs
 
-If port 8080 is already in use, select another host port for start and reset:
-
-```bash
-PETSTORE_PORT=18080 make start
-PETSTORE_PORT=18080 make reset
-```
-
-If readiness times out, the startup script prints Compose status and recent
-container logs. Inspect the complete log with:
+Jetty access logs are written to `.runtime/petstore-logs/access/` by default
+and are gitignored. Application output is available through Docker Compose:
 
 ```bash
 make logs
 ```
+
+If startup readiness times out, the startup script prints Compose status and
+recent container logs before exiting.
+
+## CI reports
+
+CI publishes browsable Allure reports to GitHub Pages separately from the
+merge-gating `Tests` workflow. The reporting workflow (`Reports`) never gates a
+merge; `Tests / test` remains the required check.
+
+- Public dashboard: <https://trusovn.github.io/petstore-v2-tests/>
+- Reports are separated by suite (`unit`, `regular`, `quarantine`) and ref
+  (`main`, `pr-<number>`).
+- Allure history is kept per `(ref, suite)` and capped at 20 launches.
+- PRs receive one updatable comment with unit/regular counts, bounded failure
+  details, and report links. Quarantine remains browsable but is excluded from
+  aggregate pass/fail statistics.
+- Closed PR reports are retained for seven days, then removed by a scheduled
+  cleanup.
+- Manually dispatched `Tests` runs produce a downloadable, seven-day,
+  offline-viewable HTML bundle instead of a Pages entry.
+
+GitHub Pages for this repository is public. CI reports may contain diagnostic
+request/response attachments, captured failure output, and stack traces. Do not
+run CI against fixtures or secrets that must remain private.
+
+## Troubleshooting
+
+If port `8080` is already in use, select another host port:
+
+```bash
+PETSTORE_PORT=18080 make start
+PETSTORE_PORT=18080 make verify-regular
+```
+
+If `make verify*` fails before tests run, check that `PETSTORE_API_KEY` is set
+in the environment or in `.env`.
+
+If the local server state looks stale or polluted by a previous run:
+
+```bash
+make reset
+```
+
+If a report command fails with "No ... Allure results found", run the
+corresponding test command first, for example `make verify-regular` before
+`make report-regular`.
