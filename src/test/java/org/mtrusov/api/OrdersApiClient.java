@@ -3,6 +3,7 @@ package org.mtrusov.api;
 import io.restassured.response.Response;
 import io.restassured.specification.RequestSpecification;
 import org.mtrusov.config.AuthProvider;
+import org.mtrusov.models.Order;
 
 import java.util.Objects;
 
@@ -13,7 +14,20 @@ public class OrdersApiClient extends BaseApiClient {
         super(apiConfig, authProvider);
     }
 
-    public Response placeOrder(Object order) {
+    public Response placeOrder(Order order) {
+        return given()
+                .spec(requestSpecification)
+
+                .when()
+                .body(order)
+                .post("/order")
+
+                .then()
+                .spec(responseSpecification)
+                .extract().response();
+    }
+
+    public Response placeOrderRaw(Object order) {
         RequestSpecification request = given()
                 .spec(requestSpecification)
                 .when();
@@ -22,7 +36,7 @@ public class OrdersApiClient extends BaseApiClient {
         }
         return request
                 .post("/order")
-                
+
                 .then()
                 .spec(responseSpecification)
                 .extract().response();

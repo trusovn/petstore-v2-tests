@@ -15,7 +15,7 @@ import static org.mtrusov.utils.AssertUtils.assertResponseCode;
 import static org.mtrusov.utils.OrderAsserts.assertResponseOrderMatches;
 
 @ResourceLock("petstore-orders")
-public class StoreOrderTests extends OrdersTestsBase {
+public class StoreOrderLifecycleTests extends OrdersTestsBase {
 
     @Test
     public void getAfterDeleteReturnsNotFound() {

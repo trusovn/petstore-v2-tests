@@ -52,7 +52,7 @@ public class StoreOrdersContractTests extends OrdersTestsBase {
         }
 
         private void assertInvalidBody(Object requestBody, int expectedStatusCode) {
-            Response response = ordersApiClient.placeOrder(requestBody);
+            Response response = ordersApiClient.placeOrderRaw(requestBody);
             assertResponseCode(response, expectedStatusCode);
             assertInfoMessageFieldCode(response, expectedStatusCode);
             assertInfoMessageFieldMessageNoTraces(response);

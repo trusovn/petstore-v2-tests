@@ -22,6 +22,7 @@ public class OrderAsserts {
                     .toFormatter();
 
     public static void assertResponseOrderMatches(Response response, Order order) {
+        // The check ignores date format as long as it matches. The format itself is checked elsewhere.
         response.then()
                 .body("id", equalTo(order.id()))
                 .body("petId", equalTo(order.petId()))

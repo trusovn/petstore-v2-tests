@@ -7,7 +7,10 @@ import org.mtrusov.models.Order;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
+import static java.net.HttpURLConnection.HTTP_NOT_FOUND;
 import static java.net.HttpURLConnection.HTTP_OK;
+import static org.hamcrest.Matchers.anyOf;
+import static org.hamcrest.Matchers.is;
 import static org.mtrusov.utils.AssertUtils.assertResponseCode;
 
 public class OrdersTestData {
@@ -33,7 +36,10 @@ public class OrdersTestData {
     }
 
     public void cleanup() {
-        orders.forEach(ordersApiClient::delete);
+        orders.forEach(orderId -> {
+            Response response = ordersApiClient.delete(orderId);
+            response.then().statusCode(anyOf(is(HTTP_OK), is(HTTP_NOT_FOUND)));
+        });
         orders.clear();
     }
 }
