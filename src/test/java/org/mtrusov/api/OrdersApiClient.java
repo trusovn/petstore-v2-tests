@@ -2,6 +2,7 @@ package org.mtrusov.api;
 
 import io.restassured.response.Response;
 import io.restassured.specification.RequestSpecification;
+import io.restassured.specification.ResponseSpecification;
 import org.mtrusov.config.AuthProvider;
 import org.mtrusov.models.Order;
 
@@ -12,6 +13,10 @@ import static io.restassured.RestAssured.given;
 public class OrdersApiClient extends BaseApiClient {
     public OrdersApiClient(ApiConfig apiConfig, AuthProvider authProvider) {
         super(apiConfig, authProvider);
+    }
+
+    public OrdersApiClient(RequestSpecification requestSpecification, ResponseSpecification responseSpecification) {
+        super(requestSpecification, responseSpecification);
     }
 
     public Response placeOrder(Order order) {
