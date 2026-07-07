@@ -9,7 +9,6 @@ import io.restassured.specification.RequestSpecification;
 import io.restassured.specification.ResponseSpecification;
 import io.qameta.allure.restassured.AllureRestAssured;
 import org.mtrusov.config.AuthProvider;
-import org.mtrusov.utils.ApiKeyObfuscatingPrintStream;
 
 import java.util.Objects;
 
@@ -32,7 +31,8 @@ public class BaseApiClient {
 
     protected RequestSpecification buildRequestSpecification(ApiConfig apiConfig) {
         LogConfig logConfig = LogConfig.logConfig()
-                .defaultStream(new ApiKeyObfuscatingPrintStream(System.out))
+                .blacklistDefaultSensitiveHeaders()
+                .blacklistHeader("api_key")
                 .enableLoggingOfRequestAndResponseIfValidationFails();
         RequestSpecBuilder request = new RequestSpecBuilder()
                 .setBaseUri(apiConfig.baseUri())
