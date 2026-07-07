@@ -23,19 +23,9 @@ import static org.mtrusov.utils.AssertUtils.*;
 import static org.mtrusov.utils.DateTimeAsserts.assertDateTimeIsValid;
 import static org.mtrusov.utils.OrderAsserts.assertResponseOrderMatches;
 
-public class StoreOrdersContractTests {
+public class StoreOrdersContractTests extends TestsBase {
     private static final int PLACED_ORDER_ID = 1001;
     private static final int MISSING_ORDER_ID = 1010101010;
-
-    private static OrdersApiClient ordersApiClient;
-
-    @BeforeAll
-    static void beforeAll() {
-        var apiConfig = ConfigLoader.load().storeApiConfig();
-        ordersApiClient = new OrdersApiClient(apiConfig, new NoAuthProvider());
-
-        RestAssured.enableLoggingOfRequestAndResponseIfValidationFails();
-    }
 
     @Nested
     class CreateOrder {

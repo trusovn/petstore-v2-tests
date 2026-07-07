@@ -19,16 +19,7 @@ import static java.net.HttpURLConnection.*;
 import static org.mtrusov.utils.AssertUtils.assertResponseCode;
 import static org.mtrusov.utils.OrderAsserts.assertResponseOrderMatches;
 
-public class StoreOrderTests {
-    private static OrdersApiClient ordersApiClient;
-
-    @BeforeAll
-    public static void beforeAll() {
-        var apiConfig = ConfigLoader.load().storeApiConfig();
-        ordersApiClient = new OrdersApiClient(apiConfig, new NoAuthProvider());
-
-        RestAssured.enableLoggingOfRequestAndResponseIfValidationFails();
-    }
+public class StoreOrderTests extends TestsBase {
 
     @Test
     public void getAfterDeleteReturnsNotFound() {

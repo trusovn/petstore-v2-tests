@@ -1,14 +1,11 @@
 package org.mtrusov.tests;
 
-import io.restassured.RestAssured;
 import io.restassured.response.Response;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Named;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
-import org.mtrusov.api.ApiConfig;
 import org.mtrusov.api.InventoryApiClient;
 import org.mtrusov.config.*;
 import org.mtrusov.utils.SchemaValidator;
@@ -17,21 +14,7 @@ import java.util.stream.Stream;
 
 import static org.mtrusov.utils.AssertUtils.*;
 
-public class StoreInventoryContractTests {
-    private static InventoryApiClient inventoryApiClientAuth;
-    private static ApiConfig apiConfig;
-
-    @BeforeAll
-    static void beforeAll() {
-        var appConfig = ConfigLoader.load();
-        apiConfig = appConfig.storeApiConfig();
-        inventoryApiClientAuth = new InventoryApiClient(
-                apiConfig,
-                new TokenAuthProvider(appConfig.resolvedPetstoreApiKey())
-        );
-
-        RestAssured.enableLoggingOfRequestAndResponseIfValidationFails();
-    }
+public class StoreInventoryContractTests extends TestsBase {
 
     @Test
     public void getInventoryAuth() {
