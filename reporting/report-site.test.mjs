@@ -392,7 +392,16 @@ test('renderLandingPage: quarantine link labeled non-gating; stats excluded', ()
   const html = h.renderLandingPage([makeRef('main'), makeRef('pr-1')]);
   assert.match(html, /non-gating; stats excluded/);
   assert.ok(!/>20 passed</.test(html));
+  assert.ok(!/passed passed/.test(html));
   assert.match(html, /<!DOCTYPE html>/);
+});
+test('renderLandingPage: exposes freshness metadata and cache-busted manifest check', () => {
+  const html = h.renderLandingPage([makeRef('main')], { generatedAt: '2026-07-07T13:57:11.966Z' });
+  assert.match(html, /Dashboard last updated 2026-07-07T13:57:11\.966Z/);
+  assert.match(html, /data-generated-at="2026-07-07T13:57:11\.966Z"/);
+  assert.match(html, /new URL\('manifest\.json', window\.location\.href\)/);
+  assert.match(html, /searchParams\.set\('fresh', Date\.now\(\)\.toString\(\)\)/);
+  assert.match(html, /A newer dashboard is available/);
 });
 test('renderLandingPage: open PRs appear only in the open pull requests section', () => {
   const html = h.renderLandingPage([makeRef('main'), makeRef('pr-1')]);
@@ -416,7 +425,7 @@ test('renderLandingPage: escapes display names', () => {
   });
   const html = h.renderLandingPage([ref]);
   assert.match(html, /&lt;script&gt;/);
-  assert.ok(!/<script>/.test(html.replace(/<script>\s*<\/script>/, '')));
+  assert.doesNotMatch(html, /<td class="ref"><script>/);
 });
 
 // ---------------------------------------------------------------------------

@@ -56,6 +56,11 @@ const REPORT_STYLE = `
   .gate-other { color: var(--muted); }
   .suite-flaky { color: var(--flaky); }
   .suite-empty, .suite-not-run, .suite-missing, .suite-neutral { color: var(--muted); font-weight: 400; }
+  .freshness { margin: 0 0 4px; font-size: 0.875rem; color: var(--muted); }
+  .freshness-alert {
+    margin: 12px 0 0; padding: 8px 10px; border: 1px solid var(--border);
+    background: var(--head); font-size: 0.875rem;
+  }
   @media (max-width: 720px) {
     td.updated { display: none; }
     th, td { padding: 6px 8px; }
@@ -416,9 +421,8 @@ function suiteCellHtml(ref, suite) {
     return 'unavailable';
   }
   if (s.availability === 'generated') {
-    const st = s.status === 'passed' ? 'passed' : s.status === 'failed' ? 'failed' : s.status;
     const counts = formatCounts(s.stats);
-    return `<a href="${reportUrl(ref, suite)}">${escapeHtml(`${counts} ${st}`)}</a>`;
+    return `<a href="${reportUrl(ref, suite)}">${escapeHtml(counts || s.status || 'generated')}</a>`;
   }
   if (s.availability === 'not-run') return 'not run';
   return 'unavailable';
@@ -438,11 +442,12 @@ function formatCounts(stats) {
  * Render the static, escaped landing-page HTML. No quarantine counts/status;
  * quarantine shows only an availability-aware report link.
  */
-export function renderLandingPage(refs) {
+export function renderLandingPage(refs, { generatedAt = '' } = {}) {
   const sorted = sortRefs(refs);
   const main = sorted.find((r) => r.slug === 'main');
   const open = sorted.filter((r) => r.slug !== 'main' && r.lifecycle.state === 'open');
   const closed = sorted.filter((r) => r.lifecycle.state === 'closed');
+  const generatedText = generatedAt ? `Dashboard last updated ${generatedAt}` : 'Dashboard last updated time unavailable';
 
   const header =
     '<!DOCTYPE html>\n' +
@@ -452,7 +457,9 @@ export function renderLandingPage(refs) {
     `<style>\n${REPORT_STYLE}\n</style>\n` +
     '</head>\n<body>\n' +
     `<h1>${escapeHtml(REPO_FULL_NAME)} CI reports</h1>\n` +
-    `<p><a href="https://github.com/${escapeHtml(REPO_FULL_NAME)}/actions">Actions</a></p>\n`;
+    `<p><a href="https://github.com/${escapeHtml(REPO_FULL_NAME)}/actions">Actions</a></p>\n` +
+    `<p id="freshness" class="freshness" data-generated-at="${escapeHtml(generatedAt)}">${escapeHtml(generatedText)}</p>\n` +
+    '<div id="freshness-alert" class="freshness-alert" hidden></div>\n';
 
   const tableHead =
     '<table>\n<thead><tr>' +
@@ -467,7 +474,36 @@ export function renderLandingPage(refs) {
   if (closed.length) {
     body += '<section><h2>Recently closed</h2>\n' + tableHead + closed.map(renderRefRow).join('\n') + '</tbody></table></section>\n';
   }
-  return body + '</body>\n</html>\n';
+  return body + renderFreshnessScript(generatedAt) + '</body>\n</html>\n';
+}
+
+function renderFreshnessScript(generatedAt) {
+  return `<script>
+(function () {
+  var currentGeneratedAt = ${JSON.stringify(generatedAt || '')};
+  if (!currentGeneratedAt || !window.fetch) return;
+  var alertEl = document.getElementById('freshness-alert');
+  if (!alertEl) return;
+  var manifestUrl = new URL('manifest.json', window.location.href);
+  manifestUrl.searchParams.set('fresh', Date.now().toString());
+  fetch(manifestUrl.toString(), { cache: 'no-store' })
+    .then(function (r) { return r.ok ? r.json() : null; })
+    .then(function (manifest) {
+      if (!manifest || !manifest.generatedAt) return;
+      if (new Date(manifest.generatedAt).getTime() <= new Date(currentGeneratedAt).getTime()) return;
+      var refreshUrl = new URL(window.location.href);
+      refreshUrl.searchParams.set('fresh', Date.now().toString());
+      alertEl.hidden = false;
+      alertEl.textContent = 'A newer dashboard is available. ';
+      var link = document.createElement('a');
+      link.href = refreshUrl.href;
+      link.textContent = 'Open latest';
+      alertEl.appendChild(link);
+      alertEl.appendChild(document.createTextNode('.'));
+    })
+    .catch(function () {});
+}());
+</script>\n`;
 }
 
 function gateClass(conclusion) {
