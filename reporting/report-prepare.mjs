@@ -412,9 +412,10 @@ function copyExistingReports(existingPagesDir, outPagesDir) {
 }
 
 function writeSite(outPagesDir, refs) {
-  writeFileSync(join(outPagesDir, 'index.html'), h.renderLandingPage(refs));
+  const generatedAt = new Date().toISOString();
+  writeFileSync(join(outPagesDir, 'index.html'), h.renderLandingPage(refs, { generatedAt }));
   const manifest = h.buildManifest(refs);
-  manifest.generatedAt = new Date().toISOString();
+  manifest.generatedAt = generatedAt;
   writeFileSync(join(outPagesDir, 'manifest.json'), JSON.stringify(manifest, null, 2) + '\n');
 }
 
