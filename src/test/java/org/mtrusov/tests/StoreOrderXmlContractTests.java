@@ -27,7 +27,7 @@ public class StoreOrderXmlContractTests extends TestsBase {
     }
 
     @Test
-    void getOrderCanReturnXmlWhenXmlIsRequested1() {
+    void getOrderCanReturnXmlWhenXmlIsRequested() {
         Response response = ordersXmlClient.get(PLACED_ORDER_ID);
         assertResponseCode(response, HTTP_OK);
         response.then()
